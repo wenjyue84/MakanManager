@@ -85,6 +85,8 @@ import {
   deleteRecipe,
   type Recipe 
 } from '../../lib/recipes-data';
+import { RecipeService } from '../../lib/services/recipes.service';
+import { RecipeBulkActions } from '../recipe-bulk-actions';
 import { Station } from '../../lib/types';
 import { toast } from "sonner@2.0.3";
 import { RecipeCreateModal } from '../modals/recipe-create-modal';
@@ -117,6 +119,8 @@ export function Recipes({}: RecipesProps) {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [editNotes, setEditNotes] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [selectedRecipes, setSelectedRecipes] = useState<Recipe[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -215,21 +219,25 @@ export function Recipes({}: RecipesProps) {
     toast.success('Notes updated successfully');
   };
 
-  const handleCreateRecipe = (recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>) => {
+  const handleCreateRecipe = async (recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>) => {
     try {
-      const newRecipe = createRecipe(recipeData);
+      setIsLoading(true);
+      const newRecipe = await RecipeService.createRecipe(recipeData);
       toast.success(`Recipe "${newRecipe.name}" created successfully`);
-      // Refresh the recipes list by triggering a re-render
+      // Refresh the recipes list
       setRefreshTrigger(prev => prev + 1);
     } catch (error) {
       toast.error('Failed to create recipe');
       console.error('Error creating recipe:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleUpdateRecipe = (id: string, recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>) => {
+  const handleUpdateRecipe = async (id: string, recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>) => {
     try {
-      const updatedRecipe = updateRecipe(id, recipeData);
+      setIsLoading(true);
+      const updatedRecipe = await RecipeService.updateRecipe(id, recipeData);
       if (updatedRecipe) {
         toast.success(`Recipe "${updatedRecipe.name}" updated successfully`);
         // Update the selected recipe if it's the one being edited
@@ -244,29 +252,32 @@ export function Recipes({}: RecipesProps) {
     } catch (error) {
       toast.error('Failed to update recipe');
       console.error('Error updating recipe:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleDeleteRecipeConfirm = (id: string) => {
+  const handleDeleteRecipeConfirm = async (id: string) => {
     try {
-      const recipeToDelete = getRecipeById(id);
-      if (recipeToDelete) {
-        const success = deleteRecipe(id);
-        if (success) {
-          toast.success(`Recipe "${recipeToDelete.name}" deleted successfully`);
-          // Close modals and reset state
-          setIsDeleteModalOpen(false);
-          setIsDetailOpen(false);
-          setSelectedRecipe(null);
-          // Refresh the recipes list
-          setRefreshTrigger(prev => prev + 1);
-        } else {
-          toast.error('Failed to delete recipe');
-        }
+      setIsLoading(true);
+      const success = await RecipeService.deleteRecipe(id);
+      if (success) {
+        const recipeToDelete = getRecipeById(id);
+        toast.success(`Recipe "${recipeToDelete?.name || 'Unknown'}" deleted successfully`);
+        // Close modals and reset state
+        setIsDeleteModalOpen(false);
+        setIsDetailOpen(false);
+        setSelectedRecipe(null);
+        // Refresh the recipes list
+        setRefreshTrigger(prev => prev + 1);
+      } else {
+        toast.error('Failed to delete recipe');
       }
     } catch (error) {
       toast.error('Failed to delete recipe');
       console.error('Error deleting recipe:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -285,9 +296,26 @@ export function Recipes({}: RecipesProps) {
   const allTags = Array.from(new Set(recipes.flatMap(r => r.tags)));
 
   // Recipe Grid Card Component
-  const RecipeGridCard = ({ recipe }: { recipe: Recipe }) => (
-    <Card className="cursor-pointer hover:bg-accent/50 overflow-hidden" onClick={() => handleRecipeClick(recipe)}>
-      <div className="aspect-[4/3] relative">
+  const RecipeGridCard = ({ 
+    recipe, 
+    isSelected, 
+    onSelectionChange 
+  }: { 
+    recipe: Recipe;
+    isSelected: boolean;
+    onSelectionChange: (checked: boolean) => void;
+  }) => (
+    <Card className={`cursor-pointer hover:bg-accent/50 overflow-hidden relative ${
+      isSelected ? 'ring-2 ring-primary' : ''
+    }`}>
+      <div className="absolute top-2 left-2 z-10">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={onSelectionChange}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+      <div className="aspect-[4/3] relative" onClick={() => handleRecipeClick(recipe)}>
         {recipe.photo ? (
           <img src={recipe.photo} alt={recipe.name} className="w-full h-full object-cover" />
         ) : (
@@ -301,7 +329,7 @@ export function Recipes({}: RecipesProps) {
           </div>
         )}
       </div>
-      <CardContent className="p-4">
+      <CardContent className="p-4" onClick={() => handleRecipeClick(recipe)}>
         <div className="space-y-2">
           <h4 className="font-medium truncate">{recipe.name}</h4>
           <div className="flex flex-wrap gap-1">
@@ -343,9 +371,23 @@ export function Recipes({}: RecipesProps) {
   );
 
   // Recipe Table Row Component
-  const RecipeTableRow = ({ recipe }: { recipe: Recipe }) => (
-    <TableRow className="cursor-pointer hover:bg-accent/50" onClick={() => handleRecipeClick(recipe)}>
-      <TableCell>
+  const RecipeTableRow = ({ 
+    recipe, 
+    isSelected, 
+    onSelectionChange 
+  }: { 
+    recipe: Recipe;
+    isSelected: boolean;
+    onSelectionChange: (checked: boolean) => void;
+  }) => (
+    <TableRow className="cursor-pointer hover:bg-accent/50">
+      <TableCell onClick={(e) => e.stopPropagation()}>
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={onSelectionChange}
+        />
+      </TableCell>
+      <TableCell onClick={() => handleRecipeClick(recipe)}>
         <div className="flex items-center gap-2">
           <div className="size-12 rounded-md overflow-hidden bg-muted flex items-center justify-center">
             {recipe.photo ? (
@@ -533,9 +575,22 @@ export function Recipes({}: RecipesProps) {
           </div>
         </div>
 
+        {/* Bulk Actions */}
+        <RecipeBulkActions
+          selectedRecipes={selectedRecipes}
+          onSelectionChange={setSelectedRecipes}
+          onRefresh={() => setRefreshTrigger(prev => prev + 1)}
+        />
+
         {/* Recipes List/Grid */}
         <div>
-          {filteredRecipes.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground">
+                Loading recipes...
+              </div>
+            </div>
+          ) : filteredRecipes.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-muted-foreground">
                 No recipes found. Try removing filters.
@@ -546,7 +601,18 @@ export function Recipes({}: RecipesProps) {
               {viewMode === 'grid' ? (
                 <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-3 lg:grid-cols-4'}`}>
                   {filteredRecipes.map((recipe) => (
-                    <RecipeGridCard key={recipe.id} recipe={recipe} />
+                    <RecipeGridCard 
+                      key={recipe.id} 
+                      recipe={recipe}
+                      isSelected={selectedRecipes.some(r => r.id === recipe.id)}
+                      onSelectionChange={(checked) => {
+                        if (checked) {
+                          setSelectedRecipes(prev => [...prev, recipe]);
+                        } else {
+                          setSelectedRecipes(prev => prev.filter(r => r.id !== recipe.id));
+                        }
+                      }}
+                    />
                   ))}
                 </div>
               ) : (
@@ -554,6 +620,18 @@ export function Recipes({}: RecipesProps) {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>
+                          <Checkbox
+                            checked={selectedRecipes.length === filteredRecipes.length && filteredRecipes.length > 0}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedRecipes([...filteredRecipes]);
+                              } else {
+                                setSelectedRecipes([]);
+                              }
+                            }}
+                          />
+                        </TableHead>
                         <TableHead>Photo</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Category</TableHead>
@@ -566,7 +644,18 @@ export function Recipes({}: RecipesProps) {
                     </TableHeader>
                     <TableBody>
                       {filteredRecipes.map((recipe) => (
-                        <RecipeTableRow key={recipe.id} recipe={recipe} />
+                        <RecipeTableRow 
+                          key={recipe.id} 
+                          recipe={recipe}
+                          isSelected={selectedRecipes.some(r => r.id === recipe.id)}
+                          onSelectionChange={(checked) => {
+                            if (checked) {
+                              setSelectedRecipes(prev => [...prev, recipe]);
+                            } else {
+                              setSelectedRecipes(prev => prev.filter(r => r.id !== recipe.id));
+                            }
+                          }}
+                        />
                       ))}
                     </TableBody>
                   </Table>

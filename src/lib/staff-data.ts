@@ -396,6 +396,19 @@ export const updateStaffMember = (id: string, updates: Partial<StaffMember>): vo
   }
 };
 
+export const addStaffMember = (newMember: StaffMember): void => {
+  staffMembers.push(newMember);
+};
+
+export const deleteStaffMember = (id: string): boolean => {
+  const index = staffMembers.findIndex(member => member.id === id);
+  if (index !== -1) {
+    staffMembers.splice(index, 1);
+    return true;
+  }
+  return false;
+};
+
 export const getRoleDisplayName = (roles: UserRole[]): string => {
   const roleNames = {
     'owner': 'Owner',
