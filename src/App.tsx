@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { AuthProvider } from "./lib/contexts/auth-context";
+import { ProtectedRoute } from "./components/auth/protected-route";
 import { EnhancedAppLayout } from "./components/layout/enhanced-app-layout";
 import { Dashboard } from "./components/pages/dashboard";
 import { Tasks } from "./components/pages/tasks";
@@ -18,24 +20,20 @@ import { OnlineOrdersPage } from "./components/pages/online-orders";
 import { CashPage } from "./components/pages/cash";
 import { ReportsPage } from "./components/pages/reports";
 import { TaskDetailModal } from "./components/modals/task-detail-modal";
+import { TaskManagementDemo } from "./components/pages/task-management-demo";
 import { Task, Language } from "./lib/types";
 import {
   tasks as initialTasks,
-  currentUser,
   users,
 } from "./lib/data";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 
-export default function App() {
-  const [currentPage, setCurrentPage] =
-    useState("dashboard"); // Changed back to dashboard to show the enhanced navigation
-  const [currentLanguage, setCurrentLanguage] =
-    useState<Language>("en");
+function AppContent() {
+  const [currentPage, setCurrentPage] = useState("dashboard");
+  const [currentLanguage, setCurrentLanguage] = useState<Language>("en");
   const [tasks, setTasks] = useState(initialTasks);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(
-    null,
-  );
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   const handleTaskClick = (task: Task) => {
@@ -98,87 +96,34 @@ export default function App() {
   const handleProfileClick = (userId: string) => {
     const user = users.find((u) => u.id === userId);
     toast.info(`Opening staff profile for ${user?.name}`);
-    // In a real app, this would navigate to the staff profile page
-  };
-
-  const handleDisciplineClick = () => {
-    setCurrentPage("discipline");
-    toast.info("Navigating to Disciplinary Actions");
   };
 
   const handleUserChange = (userId: string) => {
-    const newUser = users.find((u) => u.id === userId);
-    if (newUser) {
-      // Update the current user object
-      Object.assign(currentUser, newUser);
-
-      // Show notification about the user switch
-      const isStaff = newUser.roles.includes("staff");
-      const isManagement = newUser.roles.some((role) =>
-        [
-          "owner",
-          "manager",
-          "head-of-kitchen",
-          "front-desk-manager",
-        ].includes(role),
-      );
-
-      if (isStaff) {
-        toast.info(`Switched to Staff view: ${newUser.name}`, {
-          description:
-            "Can perform cash reconciliation and view own records only.",
-        });
-      } else if (isManagement) {
-        toast.info(
-          `Switched to Management view: ${newUser.name}`,
-          {
-            description:
-              "Full access: Approve cash reconciliations, view all records and analytics.",
-          },
-        );
-      }
-
-      // Force re-render by updating a state value
-      setCurrentPage((prev) => prev);
+    const user = users.find((u) => u.id === userId);
+    if (user) {
+      toast.success(`Switched to ${user.name}`);
     }
   };
 
   const renderPage = () => {
     switch (currentPage) {
       case "dashboard":
-        return (
-          <Dashboard
-            onTaskClick={handleTaskClick}
-            onCreateTask={handleCreateTask}
-            onCreateDiscipline={handleCreateDiscipline}
-          />
-        );
-      case "online-orders":
-        return <OnlineOrdersPage />;
-      case "cash":
-        return <CashPage />;
+        return <Dashboard />;
       case "tasks":
         return (
           <Tasks
             tasks={tasks}
             onTaskClick={handleTaskClick}
-            onTaskUpdate={handleTaskUpdate}
             onCreateTask={handleCreateTask}
             onCreateDiscipline={handleCreateDiscipline}
-            currentLanguage={currentLanguage}
           />
         );
+      case "task-management":
+        return <TaskManagementDemo />;
       case "leaderboard":
-        return (
-          <Leaderboard
-            onAdminClick={handleAdminClick}
-            onProfileClick={handleProfileClick}
-          />
-        );
+        return <Leaderboard />;
       case "staff":
-        return (
-          <Staff onDisciplineClick={handleDisciplineClick} />
-        );
+        return <Staff onProfileClick={handleProfileClick} />;
       case "recipes":
         return <Recipes />;
       case "staff-meal":
@@ -195,56 +140,19 @@ export default function App() {
         return <SuppliersPage />;
       case "salary":
         return <SalaryPage />;
-      case "discipline":
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">
-              Disciplinary Actions
-            </h2>
-            <p className="text-muted-foreground">
-              Disciplinary management interface coming soon!
-            </p>
-            <button
-              onClick={() => setCurrentPage("staff")}
-              className="text-primary hover:underline"
-            >
-              ← Back to Staff Directory
-            </button>
-          </div>
-        );
+      case "online-orders":
+        return <OnlineOrdersPage />;
+      case "cash":
+        return <CashPage />;
       case "reports":
         return <ReportsPage />;
-      case "admin":
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">
-              Admin Settings
-            </h2>
-            <p className="text-muted-foreground">
-              Rewards configuration and other admin settings
-              coming soon!
-            </p>
-            <button
-              onClick={() => setCurrentPage("leaderboard")}
-              className="text-primary hover:underline"
-            >
-              ← Back to Leaderboard
-            </button>
-          </div>
-        );
       default:
-        return (
-          <Dashboard
-            onTaskClick={handleTaskClick}
-            onCreateTask={handleCreateTask}
-            onCreateDiscipline={handleCreateDiscipline}
-          />
-        );
+        return <Dashboard />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <ProtectedRoute>
       <EnhancedAppLayout
         currentPage={currentPage}
         onPageChange={setCurrentPage}
@@ -262,10 +170,18 @@ export default function App() {
           setIsTaskModalOpen(false);
           setSelectedTask(null);
         }}
-        onTaskUpdate={handleTaskUpdate}
+        onUpdate={handleTaskUpdate}
       />
 
       <Toaster />
-    </div>
+    </ProtectedRoute>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

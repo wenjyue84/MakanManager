@@ -86,7 +86,8 @@ const navigationGroups = [
       { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: 'Overview and quick actions' },
       { id: 'online-orders', label: 'Online Orders', icon: Package2, description: 'Manage customer orders', badge: 3 },
       { id: 'cash', label: 'Cash', icon: Wallet, description: 'Cash reconciliation', badge: 1 },
-      { id: 'tasks', label: 'Tasks', icon: CheckSquare, description: 'Task management', badge: 5 }
+      { id: 'tasks', label: 'Tasks', icon: CheckSquare, description: 'Task management', badge: 5 },
+      { id: 'task-management', label: 'Task Management', icon: CheckSquare, description: 'Full CRUD operations for tasks', managementOnly: true }
     ]
   },
   {
