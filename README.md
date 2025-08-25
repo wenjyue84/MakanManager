@@ -41,27 +41,39 @@ Makan Moments is a full-featured restaurant management system that combines task
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn package manager
+- Docker (for local database)
 
 ### Installation
 
 1. **Clone and navigate to the project**
    ```bash
-   cd MaKanmanager
+   git clone <repo-url>
+   cd MakanManager
    ```
 
-2. **Install dependencies**
+2. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Install dependencies**
    ```bash
    npm install
    ```
 
-3. **Start the development server**
+4. **Start the database (optional)**
+   ```bash
+   docker-compose up -d
+   ```
+
+5. **Start the development server**
    ```bash
    npm run dev
    ```
 
-4. **Build for production**
+6. **Build for production**
    ```bash
    npm run build
    ```
@@ -268,6 +280,11 @@ The current architecture is designed to easily integrate with:
 - **Netlify** - Great PWA support with form handling
 - **Firebase Hosting** - Google Cloud integration
 - **Traditional Web Servers** - Apache, Nginx with static files
+
+## 📚 Additional Documentation
+
+- [RECIPE_CRUD_README.md](RECIPE_CRUD_README.md) – Detailed recipe management operations.
+- [TASK_CRUD_README.md](TASK_CRUD_README.md) – Task management workflows and CRUD examples.
 
 ## 🤝 Contributing
 
