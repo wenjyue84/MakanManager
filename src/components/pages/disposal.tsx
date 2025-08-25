@@ -101,6 +101,13 @@ export function DisposalPage() {
     });
   }, [searchQuery, selectedReason, selectedStation, selectedDate]);
 
+  const summaryByReason = useMemo(() => {
+    return filteredDisposals.reduce((acc, d) => {
+      acc[d.reason] = (acc[d.reason] ?? 0) + 1;
+      return acc;
+    }, {} as Record<Disposal['reason'], number>);
+  }, [filteredDisposals]);
+
   const getUserById = (id: string) => {
     return staffMembers.find(member => member.id === id);
   };
@@ -344,8 +351,32 @@ export function DisposalPage() {
                 )}
               </div>
             </div>
-          </div>
         </div>
+      </div>
+
+        {/* Summary */}
+        {filteredDisposals.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Total Disposals</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">{filteredDisposals.length}</p>
+              </CardContent>
+            </Card>
+            {Object.entries(summaryByReason).map(([reason, count]) => (
+              <Card key={reason}>
+                <CardHeader>
+                  <CardTitle>{getReasonLabel(reason)}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold">{count}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Disposals List */}
         <div>
