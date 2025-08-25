@@ -15,7 +15,10 @@ import {
   ChefHat,
   UtensilsCrossed,
   Filter,
-  X
+  X,
+  CheckCircle,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -48,6 +51,7 @@ import {
   DialogTitle
 } from '../ui/dialog';
 import { Separator } from '../ui/separator';
+import { Alert, AlertDescription } from '../ui/alert';
 import { currentUser } from '../../lib/data';
 import { staffMembers } from '../../lib/staff-data';
 import { 
@@ -57,7 +61,7 @@ import {
   formatTime,
   type StaffMeal 
 } from '../../lib/operations-data';
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 interface StaffMealProps {
   // No additional props needed for this demo
@@ -72,6 +76,7 @@ export function StaffMealPage({}: StaffMealProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showQuickEntry, setShowQuickEntry] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -85,6 +90,9 @@ export function StaffMealPage({}: StaffMealProps) {
     photo: '',
     notes: ''
   });
+
+  // Form validation state
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -127,39 +135,152 @@ export function StaffMealPage({}: StaffMealProps) {
     };
   }, []);
 
+  // Get current user's meals
+  const currentUserMeals = useMemo(() => {
+    return staffMeals.filter(meal => 
+      meal.cookedBy === currentUser.id || meal.eaters.includes(currentUser.id)
+    );
+  }, []);
+
   const getUserById = (id: string) => {
     return staffMembers.find(member => member.id === id);
   };
 
+  // Quick entry templates
+  const quickEntryTemplates = [
+    {
+      name: 'Simple Lunch',
+      mealType: 'lunch',
+      dishName: 'Fried Rice',
+      approximateCost: '15.00',
+      notes: 'Quick lunch using leftover rice and vegetables'
+    },
+    {
+      name: 'Simple Dinner',
+      mealType: 'dinner',
+      dishName: 'Noodle Soup',
+      approximateCost: '20.00',
+      notes: 'Warm soup for dinner'
+    },
+    {
+      name: 'Staff Favorite',
+      mealType: 'lunch',
+      dishName: 'Chicken Rice',
+      approximateCost: '25.00',
+      notes: 'Classic staff meal'
+    }
+  ];
+
+  const handleQuickEntry = (template: typeof quickEntryTemplates[0]) => {
+    setFormData(prev => ({
+      ...prev,
+      mealType: template.mealType as 'lunch' | 'dinner',
+      dishName: template.dishName,
+      approximateCost: template.approximateCost,
+      notes: template.notes,
+      eaters: [currentUser.id] // Default to current user
+    }));
+    setShowQuickEntry(false);
+    setIsCreateOpen(true);
+  };
+
   const handleCreateMeal = () => {
+    // Reset form and errors
     setFormData({
       mealType: 'lunch',
       date: new Date().toISOString().split('T')[0],
       time: new Date().toTimeString().slice(0, 5),
       dishName: '',
       cookedBy: currentUser.id,
-      eaters: [],
+      eaters: [currentUser.id], // Default to current user
       approximateCost: '',
       photo: '',
       notes: ''
     });
+    setFormErrors({});
     setIsCreateOpen(true);
   };
 
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.dishName.trim()) {
+      errors.dishName = 'Dish name is required';
+    }
+
+    if (!formData.cookedBy) {
+      errors.cookedBy = 'Please select who cooked the meal';
+    }
+
+    if (formData.eaters.length === 0) {
+      errors.eaters = 'Please select at least one eater';
+    }
+
+    if (!formData.approximateCost || parseFloat(formData.approximateCost) <= 0) {
+      errors.approximateCost = 'Please enter a valid cost';
+    }
+
+    if (!formData.date) {
+      errors.date = 'Date is required';
+    }
+
+    if (!formData.time) {
+      errors.time = 'Time is required';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSaveMeal = () => {
-    // Validate required fields
-    if (!formData.dishName || !formData.cookedBy || formData.eaters.length === 0 || !formData.approximateCost) {
-      toast.error('Please fill in all required fields');
+    if (!validateForm()) {
+      toast.error('Please fix the errors in the form');
       return;
     }
 
     // In a real app, this would save to the database
-    toast.success('Staff meal recorded successfully');
+    const newMeal: StaffMeal = {
+      id: Date.now().toString(),
+      date: formData.date,
+      time: formData.time,
+      mealType: formData.mealType,
+      dishName: formData.dishName.trim(),
+      cookedBy: formData.cookedBy,
+      eaters: formData.eaters,
+      approximateCost: parseFloat(formData.approximateCost),
+      photo: formData.photo,
+      notes: formData.notes.trim(),
+      createdAt: new Date().toISOString()
+    };
+
+    // Add to local data (in real app, this would be an API call)
+    staffMeals.unshift(newMeal);
+
+    toast.success('Staff meal recorded successfully!');
     setIsCreateOpen(false);
+    
+    // Reset form
+    setFormData({
+      mealType: 'lunch',
+      date: new Date().toISOString().split('T')[0],
+      time: new Date().toTimeString().slice(0, 5),
+      dishName: '',
+      cookedBy: currentUser.id,
+      eaters: [currentUser.id],
+      approximateCost: '',
+      photo: '',
+      notes: ''
+    });
   };
 
   const handleDeleteMeal = () => {
     if (!selectedMeal) return;
+    
+    // Remove from local data (in real app, this would be an API call)
+    const index = staffMeals.findIndex(meal => meal.id === selectedMeal.id);
+    if (index !== -1) {
+      staffMeals.splice(index, 1);
+    }
     
     toast.success(`Meal "${selectedMeal.dishName}" deleted successfully`);
     setIsDeleteDialogOpen(false);
@@ -181,9 +302,10 @@ export function StaffMealPage({}: StaffMealProps) {
   const MealCard = ({ meal }: { meal: StaffMeal }) => {
     const cookedBy = getUserById(meal.cookedBy);
     const eatersList = meal.eaters.map(id => getUserById(id)).filter(Boolean);
+    const isCurrentUserMeal = meal.cookedBy === currentUser.id || meal.eaters.includes(currentUser.id);
 
     return (
-      <Card className="cursor-pointer hover:bg-accent/50" onClick={() => {
+      <Card className={`cursor-pointer hover:bg-accent/50 ${isCurrentUserMeal ? 'ring-2 ring-blue-200' : ''}`} onClick={() => {
         setSelectedMeal(meal);
         setIsDetailOpen(true);
       }}>
@@ -234,6 +356,13 @@ export function StaffMealPage({}: StaffMealProps) {
                 <img src={meal.photo} alt={meal.dishName} className="w-full h-full object-cover" />
               </div>
             )}
+
+            {isCurrentUserMeal && (
+              <div className="flex items-center gap-1 text-blue-600 text-xs">
+                <CheckCircle className="size-3" />
+                Your meal
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -244,9 +373,10 @@ export function StaffMealPage({}: StaffMealProps) {
   const MealTableRow = ({ meal }: { meal: StaffMeal }) => {
     const cookedBy = getUserById(meal.cookedBy);
     const eatersList = meal.eaters.map(id => getUserById(id)).filter(Boolean);
+    const isCurrentUserMeal = meal.cookedBy === currentUser.id || meal.eaters.includes(currentUser.id);
 
     return (
-      <TableRow className="cursor-pointer hover:bg-accent/50" onClick={() => {
+      <TableRow className={`cursor-pointer hover:bg-accent/50 ${isCurrentUserMeal ? 'bg-blue-50' : ''}`} onClick={() => {
         setSelectedMeal(meal);
         setIsDetailOpen(true);
       }}>
@@ -270,6 +400,12 @@ export function StaffMealPage({}: StaffMealProps) {
         </TableCell>
         <TableCell>
           <div className="font-medium">{meal.dishName}</div>
+          {isCurrentUserMeal && (
+            <div className="flex items-center gap-1 text-blue-600 text-xs mt-1">
+              <CheckCircle className="size-3" />
+              Your meal
+            </div>
+          )}
         </TableCell>
         <TableCell>
           <div className="flex items-center gap-2">
@@ -353,12 +489,40 @@ export function StaffMealPage({}: StaffMealProps) {
                 </div>
               </div>
               
-              <Button onClick={handleCreateMeal} className="flex items-center gap-2">
-                <Plus className="size-4" />
-                New Meal
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setShowQuickEntry(true)} variant="outline" className="flex items-center gap-2">
+                  <Clock className="size-4" />
+                  Quick Entry
+                </Button>
+                <Button onClick={handleCreateMeal} className="flex items-center gap-2">
+                  <Plus className="size-4" />
+                  New Meal
+                </Button>
+              </div>
             </div>
           </div>
+
+          {/* Current User Stats */}
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Avatar className="size-10">
+                  <AvatarImage src={currentUser.photo} />
+                  <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <h3 className="font-medium">Welcome back, {currentUser.name}!</h3>
+                  <p className="text-sm text-muted-foreground">
+                    You've recorded {currentUserMeals.filter(m => m.cookedBy === currentUser.id).length} meals and 
+                    participated in {currentUserMeals.length} meals this week.
+                  </p>
+                </div>
+                <Button onClick={handleCreateMeal} size="sm">
+                  Record My Meal
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Search and Filters */}
           <div className="flex flex-col gap-4">
@@ -428,9 +592,13 @@ export function StaffMealPage({}: StaffMealProps) {
           {filteredMeals.length === 0 ? (
             <div className="text-center py-12">
               <UtensilsCrossed className="size-12 mx-auto mb-4 text-muted-foreground" />
-              <div className="text-muted-foreground">
+              <div className="text-muted-foreground mb-4">
                 No staff meals found. Record your first meal!
               </div>
+              <Button onClick={handleCreateMeal} className="flex items-center gap-2">
+                <Plus className="size-4" />
+                Record Your First Meal
+              </Button>
             </div>
           ) : (
             <>
@@ -469,9 +637,53 @@ export function StaffMealPage({}: StaffMealProps) {
         </div>
       </div>
 
+      {/* Quick Entry Dialog */}
+      <Dialog open={showQuickEntry} onOpenChange={setShowQuickEntry}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Quick Meal Entry</DialogTitle>
+            <DialogDescription>
+              Choose a template to quickly record your meal
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {quickEntryTemplates.map((template, index) => (
+              <Card 
+                key={index} 
+                className="cursor-pointer hover:bg-accent/50 transition-colors"
+                onClick={() => handleQuickEntry(template)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">{template.name}</h4>
+                      <p className="text-sm text-muted-foreground">{template.dishName}</p>
+                      <p className="text-sm text-muted-foreground">RM {template.approximateCost}</p>
+                    </div>
+                    <Button size="sm" variant="outline">
+                      Use Template
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowQuickEntry(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateMeal}>
+              Custom Entry
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Create/Edit Meal Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Record Staff Meal</DialogTitle>
             <DialogDescription>
@@ -483,8 +695,8 @@ export function StaffMealPage({}: StaffMealProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Meal Type *</Label>
-                <Select value={formData.mealType} onValueChange={(value) => 
-                  setFormData(prev => ({ ...prev, mealType: value as 'lunch' | 'dinner' }))
+                <Select value={formData.mealType} onValueChange={(value: 'lunch' | 'dinner') => 
+                  setFormData(prev => ({ ...prev, mealType: value }))
                 }>
                   <SelectTrigger className="mt-1">
                     <SelectValue />
@@ -494,6 +706,9 @@ export function StaffMealPage({}: StaffMealProps) {
                     <SelectItem value="dinner">Dinner</SelectItem>
                   </SelectContent>
                 </Select>
+                {formErrors.mealType && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.mealType}</p>
+                )}
               </div>
 
               <div>
@@ -512,6 +727,9 @@ export function StaffMealPage({}: StaffMealProps) {
                     className="flex-1"
                   />
                 </div>
+                {(formErrors.date || formErrors.time) && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.date || formErrors.time}</p>
+                )}
               </div>
             </div>
 
@@ -523,11 +741,14 @@ export function StaffMealPage({}: StaffMealProps) {
                 placeholder="e.g., Fried chicken rice"
                 className="mt-1"
               />
+              {formErrors.dishName && (
+                <p className="text-sm text-red-600 mt-1">{formErrors.dishName}</p>
+              )}
             </div>
 
             <div>
               <Label>Cooked By *</Label>
-              <Select value={formData.cookedBy} onValueChange={(value) => 
+              <Select value={formData.cookedBy} onValueChange={(value: string) => 
                 setFormData(prev => ({ ...prev, cookedBy: value }))
               }>
                 <SelectTrigger className="mt-1">
@@ -541,6 +762,9 @@ export function StaffMealPage({}: StaffMealProps) {
                   ))}
                 </SelectContent>
               </Select>
+              {formErrors.cookedBy && (
+                <p className="text-sm text-red-600 mt-1">{formErrors.cookedBy}</p>
+              )}
             </div>
 
             <div>
@@ -573,6 +797,9 @@ export function StaffMealPage({}: StaffMealProps) {
                   </div>
                 ))}
               </div>
+              {formErrors.eaters && (
+                <p className="text-sm text-red-600 mt-1">{formErrors.eaters}</p>
+              )}
             </div>
 
             <div>
@@ -583,7 +810,12 @@ export function StaffMealPage({}: StaffMealProps) {
                 onChange={(e) => setFormData(prev => ({ ...prev, approximateCost: e.target.value }))}
                 placeholder="0.00"
                 className="mt-1"
+                step="0.01"
+                min="0"
               />
+              {formErrors.approximateCost && (
+                <p className="text-sm text-red-600 mt-1">{formErrors.approximateCost}</p>
+              )}
             </div>
 
             <div>
@@ -603,6 +835,7 @@ export function StaffMealPage({}: StaffMealProps) {
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                 placeholder="Any additional notes about the meal..."
                 className="mt-1"
+                rows={3}
               />
             </div>
           </div>

@@ -80,7 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = () => {
       try {
+        console.log('Initializing authentication...');
         const storedUser = AuthService.getStoredUser();
+        console.log('Stored user:', storedUser);
         dispatch({ type: 'INIT_AUTH', payload: storedUser });
       } catch (error) {
         console.error('Error initializing auth:', error);

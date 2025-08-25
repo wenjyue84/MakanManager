@@ -63,7 +63,7 @@ import {
   type Issue 
 } from '../../lib/operations-data';
 import { Station } from '../../lib/types';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 
 export function IssuesPage() {
   const [activeTab, setActiveTab] = useState<Issue['status']>('open');

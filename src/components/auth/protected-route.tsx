@@ -11,8 +11,11 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps) {
   const { isAuthenticated, user, isLoading } = useAuth();
 
+  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'user:', user, 'isLoading:', isLoading);
+
   // Show loading state while checking authentication
   if (isLoading) {
+    console.log('ProtectedRoute - Showing loading state');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50">
         <LoadingSpinner size="lg" text="Loading..." />
@@ -22,8 +25,11 @@ export function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps)
 
   // If not authenticated, show login page
   if (!isAuthenticated || !user) {
+    console.log('ProtectedRoute - Not authenticated, showing login page');
     return <LoginPage />;
   }
+
+  console.log('ProtectedRoute - Authenticated, rendering children');
 
   // If roles are required, check if user has the required role
   if (requiredRoles && requiredRoles.length > 0) {

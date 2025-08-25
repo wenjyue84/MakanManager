@@ -63,7 +63,7 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | 'all'>('all');
   const [selectedStation, setSelectedStation] = useState<Station | 'all'>('all');
   const [selectedAssignee, setSelectedAssignee] = useState<string>('all');
-  const [selectedAssigner, setSelectedAssignee] = useState<string>('all');
+  const [selectedAssigner, setSelectedAssigner] = useState<string>('all');
   const [repeatOnly, setRepeatOnly] = useState(false);
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   

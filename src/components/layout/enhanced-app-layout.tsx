@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   CheckSquare, 
@@ -69,94 +70,16 @@ import { useTranslations } from '../../lib/hooks/use-translations';
 
 interface EnhancedAppLayoutProps {
   children: React.ReactNode;
-  currentPage: string;
-  onPageChange: (page: string) => void;
   onUserChange: (userId: string) => void;
 }
 
-// Navigation groups with logical organization
-const navigationGroups = [
-  {
-    id: 'operations',
-    label: t('operations'),
-    icon: LayoutDashboard,
-    items: [
-      { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard, description: t('overviewAndQuickActions'), badge: 3 },
-      { id: 'online-orders', label: t('onlineOrders'), icon: Package2, description: t('manageCustomerOrders'), badge: 3 },
-      { id: 'cash', label: t('cash'), icon: Wallet, description: t('cashReconciliation'), badge: 1 },
-      { id: 'tasks', label: t('tasks'), icon: CheckSquare, description: t('taskManagement'), badge: 5 },
-      { id: 'task-management', label: t('taskManagement'), icon: CheckSquare, description: t('fullCrudOperationsForTasks'), managementOnly: true }
-    ]
-  },
-  {
-    id: 'staff',
-    label: t('staffManagement'),
-    icon: Users,
-    items: [
-      { id: 'staff', label: t('staffDirectory'), icon: Users, description: t('staffInformationAndManagement') },
-      { id: 'leaderboard', label: t('leaderboard'), icon: Trophy, description: t('performanceRankings') },
-      { id: 'skills', label: t('skillsMatrix'), icon: GraduationCap, description: t('staffSkillsTracking') },
-      { id: 'salary', label: t('salary'), icon: DollarSign, description: t('payrollAndSalaryManagement') }
-    ]
-  },
-  {
-    id: 'kitchen',
-    label: t('kitchenAndInventory'),
-    icon: UtensilsCrossed,
-    items: [
-      { id: 'recipes', label: t('recipes'), icon: BookOpen, description: t('recipeManagement') },
-      { id: 'staff-meal', label: t('staffMeal'), icon: UtensilsCrossed, description: t('staffMealTracking') },
-      { id: 'purchase-list', label: t('purchaseList'), icon: ShoppingCart, description: t('inventoryAndPurchasing') },
-      { id: 'suppliers', label: t('suppliers'), icon: Building2, description: t('supplierManagement') },
-      { id: 'disposal', label: t('disposal'), icon: Trash2, description: t('wasteTracking') }
-    ]
-  },
-  {
-    id: 'issues',
-    label: t('issuesAndReports'),
-    icon: AlertCircle,
-    items: [
-      { id: 'issues', label: t('issues'), icon: AlertCircle, description: t('issueReportingAndTracking'), badge: 2 },
-      { id: 'discipline', label: t('discipline'), icon: AlertTriangle, description: t('disciplinaryActions'), managementOnly: true },
-      { id: 'reports', label: t('reports'), icon: BarChart3, description: t('analyticsAndReports'), managementOnly: true },
-      { id: 'admin', label: t('admin'), icon: Settings, description: t('systemAdministration'), managementOnly: true }
-    ]
-  }
-];
-
-// Global search data
-const searchableItems = [
-  // Pages
-  ...navigationGroups.flatMap(group => 
-    group.items.map(item => ({
-      id: item.id,
-      title: item.label,
-      description: item.description,
-      type: 'page' as const,
-      group: group.label,
-      icon: item.icon
-    }))
-  ),
-  // Sample data items (in real app, this would be dynamic)
-  { id: 'order-001', title: 'Order #ORD-001', description: 'Ahmad Rizal - RM28.40', type: 'order' as const, group: 'Orders' },
-  { id: 'staff-sherry', title: 'Sherry', description: 'Front of House Staff', type: 'staff' as const, group: 'Staff' },
-  { id: 'recipe-teh-tarik', title: 'Teh Tarik', description: 'Traditional milk tea recipe', type: 'recipe' as const, group: 'Recipes' },
-  { id: 'task-clean-machine', title: 'Clean Espresso Machine', description: 'Daily maintenance task', type: 'task' as const, group: 'Tasks' }
-];
-
-const languages = [
-  { code: 'en' as const, name: languageNames.en },
-  { code: 'id' as const, name: languageNames.id },
-  { code: 'vi' as const, name: languageNames.vi },
-  { code: 'my' as const, name: languageNames.my }
-];
-
 export function EnhancedAppLayout({ 
   children, 
-  currentPage, 
-  onPageChange,
   onUserChange
 }: EnhancedAppLayoutProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentPage = location.pathname.replace('/', '') || 'dashboard';
   const { currentLanguage, t, setLanguage, languageNames } = useTranslations();
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -166,6 +89,88 @@ export function EnhancedAppLayout({
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations']); // Operations expanded by default
   const [pinnedItems, setPinnedItems] = useState<string[]>(['dashboard', 'online-orders', 'cash']); // Default pinned items
   const [recentItems, setRecentItems] = useState<string[]>(['tasks', 'staff']);
+
+  // Navigation groups with logical organization
+  const navigationGroups = [
+    {
+      id: 'operations',
+      label: t('operations'),
+      icon: LayoutDashboard,
+      items: [
+        { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard, description: t('overviewAndQuickActions'), badge: 3 },
+        { id: 'online-orders', label: t('onlineOrders'), icon: Package2, description: t('manageCustomerOrders'), badge: 3 },
+        { id: 'cash', label: t('cash'), icon: Wallet, description: t('cashReconciliation'), badge: 1 },
+        { id: 'tasks', label: t('tasks'), icon: CheckSquare, description: t('taskManagement'), badge: 5 },
+        { id: 'task-management', label: t('taskManagement'), icon: CheckSquare, description: t('fullCrudOperationsForTasks'), managementOnly: true }
+      ]
+    },
+    {
+      id: 'staff',
+      label: t('staffManagement'),
+      icon: Users,
+      items: [
+        { id: 'staff', label: t('staffDirectory'), icon: Users, description: t('staffInformationAndManagement') },
+        { id: 'leaderboard', label: t('leaderboard'), icon: Trophy, description: t('performanceRankings') },
+        { id: 'skills', label: t('skillsMatrix'), icon: GraduationCap, description: t('staffSkillsTracking') },
+        { id: 'salary', label: t('salary'), icon: DollarSign, description: t('payrollAndSalaryManagement') }
+      ]
+    },
+    {
+      id: 'kitchen',
+      label: t('kitchenAndInventory'),
+      icon: UtensilsCrossed,
+      items: [
+        { id: 'recipes', label: t('recipes'), icon: BookOpen, description: t('recipeManagement') },
+        { id: 'staff-meal', label: t('staffMeal'), icon: UtensilsCrossed, description: t('staffMealTracking') },
+        { id: 'purchase-list', label: t('purchaseList'), icon: ShoppingCart, description: t('inventoryAndPurchasing') },
+        { id: 'suppliers', label: t('suppliers'), icon: Building2, description: t('supplierManagement') },
+        { id: 'disposal', label: t('disposal'), icon: Trash2, description: t('wasteTracking') }
+      ]
+    },
+    {
+      id: 'issues',
+      label: t('issuesAndReports'),
+      icon: AlertCircle,
+      items: [
+        { id: 'issues', label: t('issues'), icon: AlertCircle, description: t('issueReportingAndTracking'), badge: 2 },
+        { id: 'discipline', label: t('discipline'), icon: AlertTriangle, description: t('disciplinaryActions'), managementOnly: true },
+        { id: 'reports', label: t('reports'), icon: BarChart3, description: t('analyticsAndReports'), managementOnly: true },
+        { id: 'admin', label: t('admin'), icon: Settings, description: t('systemAdministration'), managementOnly: true }
+      ]
+    }
+  ];
+
+  // Global search data
+  const searchableItems = [
+    // Pages
+    ...navigationGroups.flatMap(group => 
+      group.items.map(item => ({
+        id: item.id,
+        title: item.label,
+        description: item.description,
+        type: 'page' as const,
+        group: group.label,
+        icon: item.icon,
+        url: `/${item.id}`
+      }))
+    ),
+    // Sample data items (in real app, this would be dynamic)
+    { id: 'order-001', title: 'Order #ORD-001', description: 'Ahmad Rizal - RM28.40', type: 'order' as const, group: 'Orders', url: '/online-orders' },
+    { id: 'order-002', title: 'Order #ORD-002', description: 'Siti Nurhaliza - RM45.20', type: 'order' as const, group: 'Orders', url: '/online-orders' },
+    { id: 'staff-sherry', title: 'Sherry', description: 'Front of House Staff', type: 'staff' as const, group: 'Staff', url: '/staff' },
+    { id: 'staff-ahmad', title: 'Ahmad Rizal', description: 'Kitchen Staff', type: 'staff' as const, group: 'Staff', url: '/staff' },
+    { id: 'recipe-teh-tarik', title: 'Teh Tarik', description: 'Traditional milk tea recipe', type: 'recipe' as const, group: 'Recipes', url: '/recipes' },
+    { id: 'recipe-nasi-lemak', title: 'Nasi Lemak', description: 'Traditional Malaysian dish', type: 'recipe' as const, group: 'Recipes', url: '/recipes' },
+    { id: 'task-clean-machine', title: 'Clean Espresso Machine', description: 'Daily maintenance task', type: 'task' as const, group: 'Tasks', url: '/tasks' },
+    { id: 'task-stock-check', title: 'Weekly Stock Check', description: 'Inventory management task', type: 'task' as const, group: 'Tasks', url: '/tasks' }
+  ];
+
+  const languages = [
+    { code: 'en' as const, name: languageNames.en },
+    { code: 'id' as const, name: languageNames.id },
+    { code: 'vi' as const, name: languageNames.vi },
+    { code: 'my' as const, name: languageNames.my }
+  ];
 
   useEffect(() => {
     setMounted(true);
@@ -197,7 +202,7 @@ export function EnhancedAppLayout({
         const quickNavItems = ['dashboard', 'online-orders', 'cash', 'tasks'];
         const index = parseInt(e.key) - 1;
         if (quickNavItems[index]) {
-          handlePageChange(quickNavItems[index]);
+          handleNavigation(quickNavItems[index]);
         }
       }
     };
@@ -215,20 +220,20 @@ export function EnhancedAppLayout({
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 
-  const handlePageChange = (page: string) => {
-    onPageChange(page);
+  const handleNavigation = (pageId: string) => {
+    navigate(`/${pageId}`);
     setIsMoreMenuOpen(false);
     setIsSearchOpen(false);
     
     // Add to recent items
     setRecentItems(prev => {
-      const filtered = prev.filter(item => item !== page);
-      return [page, ...filtered].slice(0, 5);
+      const filtered = prev.filter(item => item !== pageId);
+      return [pageId, ...filtered].slice(0, 5);
     });
   };
 
   const handleNotificationNavigate = (url: string) => {
-    onPageChange(url);
+    handleNavigation(url);
   };
 
   const toggleGroupExpanded = (groupId: string) => {
@@ -249,8 +254,18 @@ export function EnhancedAppLayout({
 
   const filteredSearchResults = searchableItems.filter(item => 
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.group.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Group search results by type
+  const groupedSearchResults = filteredSearchResults.reduce((acc, item) => {
+    if (!acc[item.group]) {
+      acc[item.group] = [];
+    }
+    acc[item.group].push(item);
+    return acc;
+  }, {} as Record<string, typeof searchableItems>);
 
   const getItemIcon = (iconComponent: any) => {
     const Icon = iconComponent;
@@ -324,7 +339,7 @@ export function EnhancedAppLayout({
             return (
               <button
                 key={item.id}
-                onClick={() => handlePageChange(item.id)}
+                onClick={() => handleNavigation(item.id)}
                 className={cn(
                   "flex-1 flex flex-col items-center justify-center py-2 px-1 text-xs relative",
                   isActive 
@@ -353,9 +368,9 @@ export function EnhancedAppLayout({
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[80vh]">
               <SheetHeader>
-                <SheetTitle>All Features</SheetTitle>
+                <SheetTitle>{t('allFeatures')}</SheetTitle>
                 <SheetDescription>
-                  Access all sections of Makan Moments Cafe
+                  {t('accessAllSectionsOfMakanMomentsCafe')}
                 </SheetDescription>
               </SheetHeader>
               
@@ -375,7 +390,7 @@ export function EnhancedAppLayout({
                           return (
                             <button
                               key={item.id}
-                              onClick={() => handlePageChange(item.id)}
+                              onClick={() => handleNavigation(item.id)}
                               className={cn(
                                 "flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-colors relative",
                                 isActive 
@@ -457,7 +472,7 @@ export function EnhancedAppLayout({
                 return (
                   <button
                     key={item.id}
-                    onClick={() => handlePageChange(item.id)}
+                    onClick={() => handleNavigation(item.id)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left mb-1 group",
                       isActive 
@@ -508,7 +523,7 @@ export function EnhancedAppLayout({
                 return (
                   <button
                     key={item.id}
-                    onClick={() => handlePageChange(item.id)}
+                    onClick={() => handleNavigation(item.id)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left mb-1",
                       isActive 
@@ -558,7 +573,7 @@ export function EnhancedAppLayout({
                       return (
                         <button
                           key={item.id}
-                          onClick={() => handlePageChange(item.id)}
+                          onClick={() => handleNavigation(item.id)}
                           className={cn(
                             "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left group",
                             isActive 
@@ -679,39 +694,44 @@ export function EnhancedAppLayout({
             {searchQuery ? (
               <ScrollArea className="h-80">
                 {filteredSearchResults.length > 0 ? (
-                  <div className="space-y-2">
-                    {filteredSearchResults.map(item => (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          if (item.type === 'page') {
-                            handlePageChange(item.id);
-                          }
-                          setIsSearchOpen(false);
-                        }}
-                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent text-left"
-                      >
-                        {item.icon && getItemIcon(item.icon)}
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium">{item.title}</div>
-                          <div className="text-sm text-muted-foreground">{item.description}</div>
+                  <div className="space-y-4">
+                    {Object.entries(groupedSearchResults).map(([group, items]) => (
+                      <div key={group}>
+                        <h4 className="font-medium text-sm text-muted-foreground mb-2 px-3">{group}</h4>
+                        <div className="space-y-1">
+                          {items.map(item => (
+                            <button
+                              key={item.id}
+                              onClick={() => {
+                                handleNavigation(item.url.replace(/^\//, ''));
+                                setIsSearchOpen(false);
+                              }}
+                              className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent text-left"
+                            >
+                              {item.icon && getItemIcon(item.icon)}
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium">{item.title}</div>
+                                <div className="text-sm text-muted-foreground truncate">{item.description}</div>
+                              </div>
+                              <Badge variant="outline" className="text-xs">{item.type}</Badge>
+                            </button>
+                          ))}
                         </div>
-                        <Badge variant="outline" className="text-xs">{item.group}</Badge>
-                      </button>
+                      </div>
                     ))}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    No results found for "{searchQuery}"
+                    {t('noResultsFoundFor')} "{searchQuery}"
                   </div>
                 )}
               </ScrollArea>
             ) : (
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium mb-2">Quick Access</h4>
+                  <h4 className="font-medium mb-2">{t('quickAccess')}</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    {['dashboard', 'online-orders', 'cash', 'tasks'].map(itemId => {
+                    {['dashboard', 'tasks', 'staff', 'online-orders'].map(itemId => {
                       const allItems = navigationGroups.flatMap(g => g.items);
                       const item = allItems.find(i => i.id === itemId);
                       if (!item) return null;
@@ -719,13 +739,13 @@ export function EnhancedAppLayout({
                       return (
                         <button
                           key={item.id}
-                          onClick={() => handlePageChange(item.id)}
+                          onClick={() => handleNavigation(item.id)}
                           className="flex items-center gap-2 p-2 rounded hover:bg-accent text-left"
                         >
                           {getItemIcon(item.icon)}
                           <span className="text-sm">{item.label}</span>
                           <kbd className="ml-auto text-xs bg-muted px-1 rounded">
-                            ⌘{['1', '2', '3', '4'][['dashboard', 'online-orders', 'cash', 'tasks'].indexOf(item.id)]}
+                            ⌘{['1', '2', '3', '4'][['dashboard', 'tasks', 'staff', 'online-orders'].indexOf(item.id)]}
                           </kbd>
                         </button>
                       );
@@ -744,7 +764,7 @@ export function EnhancedAppLayout({
                       return (
                         <button
                           key={item.id}
-                          onClick={() => handlePageChange(item.id)}
+                          onClick={() => handleNavigation(item.id)}
                           className="w-full flex items-center gap-2 p-2 rounded hover:bg-accent text-left"
                         >
                           {getItemIcon(item.icon)}

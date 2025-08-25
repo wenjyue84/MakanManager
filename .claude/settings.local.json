@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(npm install)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Read(/C:\\Users\\Jyue\\AppData\\Roaming/**)",
+      "Read(/C:\\Users\\Jyue\\AppData\\Local/**)",
+      "Read(/C:\\Users\\Jyue\\AppData\\Roaming\\Claude/**)",
+      "Read(/C:\\Users\\Jyue\\AppData\\Roaming\\Claude/**)",
+      "Bash(setx:*)"
     ],
     "deny": [],
     "ask": []

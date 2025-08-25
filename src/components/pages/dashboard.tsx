@@ -33,17 +33,39 @@ import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { StatusChip } from '../ui/status-chip';
 import { Progress } from '../ui/progress';
 import { Separator } from '../ui/separator';
-import { tasks, users, currentUser } from '../../lib/data';
+import { tasks, users } from '../../lib/data';
 import { getUnreadCount } from '../../lib/notifications-data';
 import { Task, User as UserType } from '../../lib/types';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 
 interface DashboardProps {
   onTaskClick: (task: Task) => void;
   onCreateTask: () => void;
   onCreateDiscipline: () => void;
+  onNewOrder: () => void;
+  onCashCount: () => void;
+  onStaffMeal: () => void;
+  onReportIssue: () => void;
+  onClockIn: () => void;
+  onRequestMeal: () => void;
+  onTakeBreak: () => void;
+  onGetHelp: () => void;
 }
 
-export function Dashboard({ onTaskClick, onCreateTask, onCreateDiscipline }: DashboardProps) {
+export function Dashboard({ 
+  onTaskClick, 
+  onCreateTask, 
+  onCreateDiscipline,
+  onNewOrder,
+  onCashCount,
+  onStaffMeal,
+  onReportIssue,
+  onClockIn,
+  onRequestMeal,
+  onTakeBreak,
+  onGetHelp
+}: DashboardProps) {
+  const { user: currentUser, isLoading } = useCurrentUser();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [salesData, setSalesData] = useState({
     today: 2675.50,
@@ -57,6 +79,11 @@ export function Dashboard({ onTaskClick, onCreateTask, onCreateDiscipline }: Das
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  // Safety check for currentUser
+  if (isLoading || !currentUser) {
+    return <div>Loading...</div>;
+  }
 
   const isManagement = currentUser.roles.some(role => 
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
@@ -95,15 +122,15 @@ export function Dashboard({ onTaskClick, onCreateTask, onCreateDiscipline }: Das
 
   // Quick actions based on role
   const quickActions = isManagement ? [
-    { id: 'new-order', label: 'New Order', icon: Package, action: () => onTaskClick, color: 'primary' },
-    { id: 'cash-count', label: 'Cash Count', icon: Wallet, color: 'warning' },
-    { id: 'staff-meal', label: 'Staff Meal', icon: Utensils, color: 'success' },
-    { id: 'issue-report', label: 'Report Issue', icon: AlertTriangle, color: 'destructive' }
+    { id: 'new-order', label: 'New Order', icon: Package, action: onNewOrder, color: 'primary' },
+    { id: 'cash-count', label: 'Cash Count', icon: Wallet, action: onCashCount, color: 'warning' },
+    { id: 'staff-meal', label: 'Staff Meal', icon: Utensils, action: onStaffMeal, color: 'success' },
+    { id: 'issue-report', label: 'Report Issue', icon: AlertTriangle, action: onReportIssue, color: 'destructive' }
   ] : [
-    { id: 'clock-in', label: 'Clock In/Out', icon: Clock, color: 'primary' },
-    { id: 'staff-meal', label: 'Request Meal', icon: Utensils, color: 'success' },
-    { id: 'break', label: 'Take Break', icon: Coffee, color: 'secondary' },
-    { id: 'help', label: 'Get Help', icon: AlertCircle, color: 'outline' }
+    { id: 'clock-in', label: 'Clock In/Out', icon: Clock, action: onClockIn, color: 'primary' },
+    { id: 'staff-meal', label: 'Request Meal', icon: Utensils, action: onRequestMeal, color: 'success' },
+    { id: 'break', label: 'Take Break', icon: Coffee, action: onTakeBreak, color: 'secondary' },
+    { id: 'help', label: 'Get Help', icon: AlertCircle, action: onGetHelp, color: 'outline' }
   ];
 
   // Staff performance data

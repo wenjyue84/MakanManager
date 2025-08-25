@@ -72,14 +72,19 @@ CREATE TABLE disciplinary_actions (
 CREATE TABLE recipes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
-    category VARCHAR(100),
+    category VARCHAR(100) NOT NULL,
+    cuisine VARCHAR(100) NOT NULL,
+    station station_type NOT NULL,
+    yield VARCHAR(100) NOT NULL,
+    prep_time INTEGER NOT NULL, -- in minutes
+    tags TEXT[] DEFAULT '{}',
     photo TEXT,
     ingredients JSONB NOT NULL DEFAULT '[]',
     steps TEXT[] NOT NULL DEFAULT '{}',
     allergens TEXT[] DEFAULT '{}',
-    tags TEXT[] DEFAULT '{}',
-    prep_time INTEGER, -- in minutes
-    station station_type NOT NULL,
+    notes TEXT,
+    created_by UUID NOT NULL REFERENCES users(id),
+    updated_by UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

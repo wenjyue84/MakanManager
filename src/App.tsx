@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./lib/contexts/auth-context";
 import { LanguageProvider } from "./lib/contexts/language-context";
 import { ProtectedRoute } from "./components/auth/protected-route";
@@ -31,7 +32,6 @@ import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState("dashboard");
   const [tasks, setTasks] = useState(initialTasks);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -86,8 +86,19 @@ function AppContent() {
     );
   };
 
+  const handleNewOrder = () => toast.info("New Order feature coming soon!");
+  const handleCashCount = () => toast.info("Cash Count feature coming soon!");
+  const handleStaffMeal = () => toast.info("Staff Meal feature coming soon!");
+  const handleReportIssue = () => {
+    // Navigate to issues page
+    window.location.hash = '#/issues';
+  };
+  const handleClockIn = () => toast.info("Clock In/Out feature coming soon!");
+  const onRequestMeal = () => toast.info("Request Meal feature coming soon!");
+  const onTakeBreak = () => toast.info("Take Break feature coming soon!");
+  const onGetHelp = () => toast.info("Get Help feature coming soon!");
+
   const handleAdminClick = () => {
-    setCurrentPage("admin");
     toast.info(
       "Navigating to Admin settings for rewards configuration",
     );
@@ -105,74 +116,68 @@ function AppContent() {
     }
   };
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case "dashboard":
-        return <Dashboard />;
-      case "tasks":
-        return (
-          <Tasks
-            tasks={tasks}
-            onTaskClick={handleTaskClick}
-            onCreateTask={handleCreateTask}
-            onCreateDiscipline={handleCreateDiscipline}
-          />
-        );
-      case "task-management":
-        return <TaskManagementDemo />;
-      case "leaderboard":
-        return <Leaderboard />;
-      case "staff":
-        return <Staff onProfileClick={handleProfileClick} />;
-      case "recipes":
-        return <Recipes />;
-      case "staff-meal":
-        return <StaffMealPage />;
-      case "disposal":
-        return <DisposalPage />;
-      case "issues":
-        return <IssuesPage />;
-      case "purchase-list":
-        return <PurchaseListPage />;
-      case "skills":
-        return <SkillsPage />;
-      case "suppliers":
-        return <SuppliersPage />;
-      case "salary":
-        return <SalaryPage />;
-      case "online-orders":
-        return <OnlineOrdersPage />;
-      case "cash":
-        return <CashPage />;
-      case "reports":
-        return <ReportsPage />;
-      default:
-        return <Dashboard />;
-    }
-  };
+
 
   return (
-    <ProtectedRoute>
-      <EnhancedAppLayout
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        onUserChange={handleUserChange}
-      >
-        {renderPage()}
-      </EnhancedAppLayout>
+    <Router>
+      <ProtectedRoute>
+        <EnhancedAppLayout onUserChange={handleUserChange}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={
+              <Dashboard 
+                onTaskClick={handleTaskClick}
+                onCreateTask={handleCreateTask}
+                onCreateDiscipline={handleCreateDiscipline}
+                onNewOrder={handleNewOrder}
+                onCashCount={handleCashCount}
+                onStaffMeal={handleStaffMeal}
+                onReportIssue={handleReportIssue}
+                onClockIn={handleClockIn}
+                onRequestMeal={onRequestMeal}
+                onTakeBreak={onTakeBreak}
+                onGetHelp={onGetHelp}
+              />
+            } />
+            <Route path="/tasks" element={
+              <Tasks
+                tasks={tasks}
+                onTaskClick={handleTaskClick}
+                onCreateTask={handleCreateTask}
+                onCreateDiscipline={handleCreateDiscipline}
+              />
+            } />
+            <Route path="/task-management" element={<TaskManagementDemo />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/staff" element={<Staff onProfileClick={handleProfileClick} />} />
+            <Route path="/recipes" element={<Recipes />} />
+            <Route path="/staff-meal" element={<StaffMealPage />} />
+            <Route path="/disposal" element={<DisposalPage />} />
+            <Route path="/issues" element={<IssuesPage />} />
+            <Route path="/purchase-list" element={<PurchaseListPage />} />
+            <Route path="/skills" element={<SkillsPage />} />
+            <Route path="/suppliers" element={<SuppliersPage />} />
+            <Route path="/salary" element={<SalaryPage />} />
+            <Route path="/online-orders" element={<OnlineOrdersPage />} />
+            <Route path="/cash" element={<CashPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </EnhancedAppLayout>
 
-      <TaskDetailModal
-        task={selectedTask}
-        isOpen={isTaskModalOpen}
-        onClose={() => {
-          setIsTaskModalOpen(false);
-          setSelectedTask(null);
-        }}
-        onUpdate={handleTaskUpdate}
-      />
+        <TaskDetailModal
+          task={selectedTask}
+          isOpen={isTaskModalOpen}
+          onClose={() => {
+            setIsTaskModalOpen(false);
+            setSelectedTask(null);
+          }}
+          onUpdate={handleTaskUpdate}
+        />
 
-      <Toaster />
-    </ProtectedRoute>
+        <Toaster />
+      </ProtectedRoute>
+    </Router>
   );
 }
 

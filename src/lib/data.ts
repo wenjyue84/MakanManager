@@ -584,15 +584,17 @@ export const appSettings: AppSettings = {
   languages: ['en', 'id', 'vi', 'my']
 };
 
-// Current user session (for demo purposes) - Default to Bahar (Staff)
-export const currentUser = users[4]; // Bahar (Staff)
+// DEPRECATED: Use useCurrentUser hook instead
+// This export is kept for backward compatibility but should not be used in new code
+export const currentUser = users[4]; // Bahar (Staff) - DEPRECATED
 
 // For switching views between staff and manager
 export const switchUserRole = (userId: string) => {
   const user = users.find(u => u.id === userId);
   if (user) {
     // In a real app, this would update the session
-    Object.assign(currentUser, user);
+    // Note: This function is deprecated and should not be used
+    console.warn('switchUserRole is deprecated. Use the auth context instead.');
   }
 };
 
