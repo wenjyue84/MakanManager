@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { AuthContextType, AuthState, LoginCredentials, User } from '../types';
-import { users } from '../data';
+import { AuthService } from '../services/auth.service';
 
 // Initial state
 const initialState: AuthState = {
@@ -80,13 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = () => {
       try {
-        const storedUser = localStorage.getItem('makanmanager_user');
-        if (storedUser) {
-          const user = JSON.parse(storedUser);
-          dispatch({ type: 'INIT_AUTH', payload: user });
-        } else {
-          dispatch({ type: 'INIT_AUTH', payload: null });
-        }
+        const storedUser = AuthService.getStoredUser();
+        dispatch({ type: 'INIT_AUTH', payload: storedUser });
       } catch (error) {
         console.error('Error initializing auth:', error);
         dispatch({ type: 'INIT_AUTH', payload: null });
@@ -101,22 +96,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'LOGIN_START' });
 
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const result = await AuthService.login(credentials);
 
-      // Find user by email and password
-      const user = users.find(
-        u => u.email.toLowerCase() === credentials.email.toLowerCase() && 
-             u.password === credentials.password
-      );
-
-      if (user) {
-        // Store user in localStorage
-        localStorage.setItem('makanmanager_user', JSON.stringify(user));
-        dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+      if (result.success && result.user) {
+        AuthService.storeUser(result.user);
+        dispatch({ type: 'LOGIN_SUCCESS', payload: result.user });
         return true;
       } else {
-        dispatch({ type: 'LOGIN_FAILURE', payload: 'Invalid email or password' });
+        dispatch({ type: 'LOGIN_FAILURE', payload: result.error || 'Login failed' });
         return false;
       }
     } catch (error) {
@@ -127,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Logout function
   const logout = () => {
-    localStorage.removeItem('makanmanager_user');
+    AuthService.logout();
     dispatch({ type: 'LOGOUT' });
   };
 
