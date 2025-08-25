@@ -524,6 +524,80 @@ export function StaffMealPage({}: StaffMealProps) {
             </CardContent>
           </Card>
 
+          {/* Personal Meal History */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ChefHat className="size-5" />
+                Your Meal History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {currentUserMeals.length === 0 ? (
+                <div className="text-center py-6">
+                  <UtensilsCrossed className="size-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-muted-foreground">No meals recorded yet. Start by recording your first meal!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {currentUserMeals.slice(0, 5).map((meal) => {
+                    const cookedBy = getUserById(meal.cookedBy);
+                    const isCook = meal.cookedBy === currentUser.id;
+                    const isEater = meal.eaters.includes(currentUser.id);
+                    
+                    return (
+                      <div key={meal.id} className="flex items-center justify-between p-3 bg-accent/30 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="text-center">
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(meal.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{formatTime(meal.time)}</div>
+                          </div>
+                          <div className="w-px h-8 bg-border"></div>
+                          <div>
+                            <div className="font-medium">{meal.dishName}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {isCook ? 'Cooked by you' : `Cooked by ${cookedBy?.name}`}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="capitalize">
+                            {meal.mealType}
+                          </Badge>
+                          <span className="text-sm font-medium text-green-600">
+                            RM {meal.approximateCost.toFixed(2)}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setSelectedMeal(meal);
+                              setIsDetailOpen(true);
+                            }}
+                          >
+                            <Eye className="size-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {currentUserMeals.length > 5 && (
+                    <div className="text-center pt-2">
+                      <Button variant="outline" size="sm" onClick={() => {
+                        // Could expand to show more meals
+                        toast.info('View all meals in the main list below');
+                      }}>
+                        View All {currentUserMeals.length} Meals
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Search and Filters */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-col md:flex-row gap-4">

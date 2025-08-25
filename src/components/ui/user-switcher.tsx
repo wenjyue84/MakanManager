@@ -25,6 +25,9 @@ export function UserSwitcher({ onUserChange }: UserSwitcherProps) {
   
   if (!user) return null;
 
+  // Only owners can switch users
+  const isOwner = user.roles.includes('owner');
+  
   const staffUsers = users.filter(user => user.roles.includes('staff'));
   const managementUsers = users.filter(user => 
     user.roles.some(role => ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role))
@@ -60,11 +63,14 @@ export function UserSwitcher({ onUserChange }: UserSwitcherProps) {
           Sign Out
         </DropdownMenuItem>
         
-        <DropdownMenuSeparator />
-        
-        <DropdownMenuLabel className="text-xs text-muted-foreground uppercase">
-          Switch User (Demo)
-        </DropdownMenuLabel>
+        {/* Only show user switching for owners */}
+        {isOwner && (
+          <>
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuLabel className="text-xs text-muted-foreground uppercase">
+              Switch User (Owner Only)
+            </DropdownMenuLabel>
         
         <DropdownMenuLabel className="text-xs text-muted-foreground uppercase">
           Management
@@ -121,6 +127,8 @@ export function UserSwitcher({ onUserChange }: UserSwitcherProps) {
             </div>
           </DropdownMenuItem>
         ))}
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

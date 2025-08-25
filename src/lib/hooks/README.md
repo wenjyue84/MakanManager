@@ -119,3 +119,4 @@ The following components still need to be migrated from the deprecated `currentU
 - Components should be migrated gradually to avoid breaking changes
 - The `switchUserRole` function is also deprecated and should not be used
 - All new components should use the `useCurrentUser` hook
+- **User switching is restricted to owners only** - other users cannot switch between user accounts
