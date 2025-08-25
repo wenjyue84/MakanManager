@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
   Plus, 
@@ -17,7 +17,8 @@ import {
   Filter,
   TrendingUp,
   User,
-  FileText
+  FileText,
+  Calculator
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -94,6 +95,10 @@ export function SalaryPage() {
   const [selectedRecord, setSelectedRecord] = useState<OvertimeRecord | SalaryAdvance | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  // Add state for OT records to trigger re-renders
+  const [otRecords, setOtRecords] = useState<OvertimeRecord[]>([]);
+  const [advanceRecords, setAdvanceRecords] = useState<SalaryAdvance[]>([]);
+
   // Form states
   const [otForm, setOtForm] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -115,6 +120,26 @@ export function SalaryPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Load initial data
+  useEffect(() => {
+    loadOTRecords();
+    loadAdvanceRecords();
+  }, [selectedStaff, dateRange]);
+
+  const loadOTRecords = () => {
+    const records = getOvertimeRecordsByStaff(targetStaffId).filter(record => 
+      record.date >= dateRange.start && record.date <= dateRange.end
+    );
+    setOtRecords(records);
+  };
+
+  const loadAdvanceRecords = () => {
+    const records = getSalaryAdvancesByStaff(targetStaffId).filter(advance => 
+      advance.requestDate >= dateRange.start && advance.requestDate <= dateRange.end
+    );
+    setAdvanceRecords(records);
+  };
+
   const isManagement = currentUser.roles.some(role => 
     ['owner', 'manager'].includes(role)
   );
@@ -129,29 +154,20 @@ export function SalaryPage() {
   // Calculate summary for selected period
   const periodSummary = useMemo(() => {
     return calculatePeriodSummary(targetStaffId, dateRange.start, dateRange.end);
-  }, [targetStaffId, dateRange]);
+  }, [targetStaffId, dateRange, otRecords, advanceRecords]);
 
-  // Get records for display
-  const staffOTRecords = useMemo(() => {
-    return getOvertimeRecordsByStaff(targetStaffId).filter(record => 
-      record.date >= dateRange.start && record.date <= dateRange.end
-    );
-  }, [targetStaffId, dateRange]);
-
-  const staffAdvances = useMemo(() => {
-    return getSalaryAdvancesByStaff(targetStaffId).filter(advance => 
-      advance.requestDate >= dateRange.start && advance.requestDate <= dateRange.end
-    );
-  }, [targetStaffId, dateRange]);
+  // Get records for display - use local state instead of recalculating
+  const staffOTRecords = otRecords;
+  const staffAdvances = advanceRecords;
 
   // Pending approvals for management
   const pendingApprovals = useMemo(() => {
     if (!canApprove) return { pendingOT: [], pendingAdvances: [], totalPending: 0 };
     return getPendingApprovals();
-  }, [canApprove]);
+  }, [canApprove, otRecords, advanceRecords]);
 
   const getUserById = (id: string) => {
-    return staffMembers.find(member => member.id === id);
+    return staffMembers.find(member => member.id === member.id);
   };
 
   const handleAddOT = () => {
@@ -183,6 +199,9 @@ export function SalaryPage() {
       updatedAt: new Date().toISOString()
     });
 
+    // Reload OT records to update the UI
+    loadOTRecords();
+    
     toast.success(`OT record added! ${totalHours.toFixed(1)} hours - ${formatCurrency(totalAmount)}`);
     setIsOTDialogOpen(false);
     setOtForm({
@@ -213,6 +232,9 @@ export function SalaryPage() {
       updatedAt: new Date().toISOString()
     });
 
+    // Reload advance records to update the UI
+    loadAdvanceRecords();
+
     toast.success(`Salary advance requested: ${formatCurrency(advanceForm.amount)}`);
     setIsAdvanceDialogOpen(false);
     setAdvanceForm({
@@ -232,6 +254,8 @@ export function SalaryPage() {
     });
 
     if (updated) {
+      // Reload records to update the UI
+      loadOTRecords();
       const staff = getUserById(record.staffId);
       toast.success(`OT ${approved ? 'approved' : 'rejected'} for ${staff?.name}`);
     }
@@ -246,6 +270,8 @@ export function SalaryPage() {
     });
 
     if (updated) {
+      // Reload records to update the UI
+      loadAdvanceRecords();
       const staff = getUserById(advance.staffId);
       toast.success(`Advance ${approved ? 'approved' : 'rejected'} for ${staff?.name}`);
     }
