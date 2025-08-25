@@ -5,7 +5,8 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Alert, AlertDescription } from '../ui/alert';
-import { Loader2, Eye, EyeOff, ChefHat } from 'lucide-react';
+import { Eye, EyeOff, ChefHat } from 'lucide-react';
+import { LoadingSpinner } from '../ui/loading-spinner';
 import { toast } from 'sonner';
 
 export function LoginPage() {
@@ -64,10 +65,7 @@ export function LoginPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-orange-600" />
-          <p className="mt-2 text-gray-600">Loading...</p>
-        </div>
+        <LoadingSpinner size="lg" text="Loading..." />
       </div>
     );
   }
@@ -151,7 +149,7 @@ export function LoginPage() {
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <LoadingSpinner size="sm" />
                     Signing In...
                   </>
                 ) : (

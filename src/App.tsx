@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { AuthProvider } from "./lib/contexts/auth-context";
+import { LanguageProvider } from "./lib/contexts/language-context";
 import { ProtectedRoute } from "./components/auth/protected-route";
 import { EnhancedAppLayout } from "./components/layout/enhanced-app-layout";
 import { Dashboard } from "./components/pages/dashboard";
@@ -21,7 +22,7 @@ import { CashPage } from "./components/pages/cash";
 import { ReportsPage } from "./components/pages/reports";
 import { TaskDetailModal } from "./components/modals/task-detail-modal";
 import { TaskManagementDemo } from "./components/pages/task-management-demo";
-import { Task, Language } from "./lib/types";
+import { Task } from "./lib/types";
 import {
   tasks as initialTasks,
   users,
@@ -31,7 +32,6 @@ import { toast } from "sonner@2.0.3";
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState("dashboard");
-  const [currentLanguage, setCurrentLanguage] = useState<Language>("en");
   const [tasks, setTasks] = useState(initialTasks);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -156,8 +156,6 @@ function AppContent() {
       <EnhancedAppLayout
         currentPage={currentPage}
         onPageChange={setCurrentPage}
-        currentLanguage={currentLanguage}
-        onLanguageChange={setCurrentLanguage}
         onUserChange={handleUserChange}
       >
         {renderPage()}
@@ -181,7 +179,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </AuthProvider>
   );
 }

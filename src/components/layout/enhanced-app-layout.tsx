@@ -65,14 +65,12 @@ import { Separator } from '../ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 import { currentUser, users } from '../../lib/data';
 import { getUnreadCount } from '../../lib/notifications-data';
-import { Language } from '../../lib/types';
+import { useTranslations } from '../../lib/hooks/use-translations';
 
 interface EnhancedAppLayoutProps {
   children: React.ReactNode;
   currentPage: string;
   onPageChange: (page: string) => void;
-  currentLanguage: Language;
-  onLanguageChange: (language: Language) => void;
   onUserChange: (userId: string) => void;
 }
 
@@ -80,48 +78,48 @@ interface EnhancedAppLayoutProps {
 const navigationGroups = [
   {
     id: 'operations',
-    label: 'Operations',
+    label: t('operations'),
     icon: LayoutDashboard,
     items: [
-      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: 'Overview and quick actions' },
-      { id: 'online-orders', label: 'Online Orders', icon: Package2, description: 'Manage customer orders', badge: 3 },
-      { id: 'cash', label: 'Cash', icon: Wallet, description: 'Cash reconciliation', badge: 1 },
-      { id: 'tasks', label: 'Tasks', icon: CheckSquare, description: 'Task management', badge: 5 },
-      { id: 'task-management', label: 'Task Management', icon: CheckSquare, description: 'Full CRUD operations for tasks', managementOnly: true }
+      { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard, description: t('overviewAndQuickActions'), badge: 3 },
+      { id: 'online-orders', label: t('onlineOrders'), icon: Package2, description: t('manageCustomerOrders'), badge: 3 },
+      { id: 'cash', label: t('cash'), icon: Wallet, description: t('cashReconciliation'), badge: 1 },
+      { id: 'tasks', label: t('tasks'), icon: CheckSquare, description: t('taskManagement'), badge: 5 },
+      { id: 'task-management', label: t('taskManagement'), icon: CheckSquare, description: t('fullCrudOperationsForTasks'), managementOnly: true }
     ]
   },
   {
     id: 'staff',
-    label: 'Staff Management',
+    label: t('staffManagement'),
     icon: Users,
     items: [
-      { id: 'staff', label: 'Staff Directory', icon: Users, description: 'Staff information and management' },
-      { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, description: 'Performance rankings' },
-      { id: 'skills', label: 'Skills Matrix', icon: GraduationCap, description: 'Staff skills tracking' },
-      { id: 'salary', label: 'Salary', icon: DollarSign, description: 'Payroll and salary management' }
+      { id: 'staff', label: t('staffDirectory'), icon: Users, description: t('staffInformationAndManagement') },
+      { id: 'leaderboard', label: t('leaderboard'), icon: Trophy, description: t('performanceRankings') },
+      { id: 'skills', label: t('skillsMatrix'), icon: GraduationCap, description: t('staffSkillsTracking') },
+      { id: 'salary', label: t('salary'), icon: DollarSign, description: t('payrollAndSalaryManagement') }
     ]
   },
   {
     id: 'kitchen',
-    label: 'Kitchen & Inventory',
+    label: t('kitchenAndInventory'),
     icon: UtensilsCrossed,
     items: [
-      { id: 'recipes', label: 'Recipes', icon: BookOpen, description: 'Recipe management' },
-      { id: 'staff-meal', label: 'Staff Meal', icon: UtensilsCrossed, description: 'Staff meal tracking' },
-      { id: 'purchase-list', label: 'Purchase List', icon: ShoppingCart, description: 'Inventory and purchasing' },
-      { id: 'suppliers', label: 'Suppliers', icon: Building2, description: 'Supplier management' },
-      { id: 'disposal', label: 'Disposal', icon: Trash2, description: 'Waste tracking' }
+      { id: 'recipes', label: t('recipes'), icon: BookOpen, description: t('recipeManagement') },
+      { id: 'staff-meal', label: t('staffMeal'), icon: UtensilsCrossed, description: t('staffMealTracking') },
+      { id: 'purchase-list', label: t('purchaseList'), icon: ShoppingCart, description: t('inventoryAndPurchasing') },
+      { id: 'suppliers', label: t('suppliers'), icon: Building2, description: t('supplierManagement') },
+      { id: 'disposal', label: t('disposal'), icon: Trash2, description: t('wasteTracking') }
     ]
   },
   {
     id: 'issues',
-    label: 'Issues & Reports',
+    label: t('issuesAndReports'),
     icon: AlertCircle,
     items: [
-      { id: 'issues', label: 'Issues', icon: AlertCircle, description: 'Issue reporting and tracking', badge: 2 },
-      { id: 'discipline', label: 'Discipline', icon: AlertTriangle, description: 'Disciplinary actions', managementOnly: true },
-      { id: 'reports', label: 'Reports', icon: BarChart3, description: 'Analytics and reports', managementOnly: true },
-      { id: 'admin', label: 'Admin', icon: Settings, description: 'System administration', managementOnly: true }
+      { id: 'issues', label: t('issues'), icon: AlertCircle, description: t('issueReportingAndTracking'), badge: 2 },
+      { id: 'discipline', label: t('discipline'), icon: AlertTriangle, description: t('disciplinaryActions'), managementOnly: true },
+      { id: 'reports', label: t('reports'), icon: BarChart3, description: t('analyticsAndReports'), managementOnly: true },
+      { id: 'admin', label: t('admin'), icon: Settings, description: t('systemAdministration'), managementOnly: true }
     ]
   }
 ];
@@ -147,20 +145,19 @@ const searchableItems = [
 ];
 
 const languages = [
-  { code: 'en' as Language, name: 'English' },
-  { code: 'id' as Language, name: 'Bahasa Indonesia' },
-  { code: 'vi' as Language, name: 'Tiếng Việt' },
-  { code: 'my' as Language, name: 'မြန်မာဘာသာ' }
+  { code: 'en' as const, name: languageNames.en },
+  { code: 'id' as const, name: languageNames.id },
+  { code: 'vi' as const, name: languageNames.vi },
+  { code: 'my' as const, name: languageNames.my }
 ];
 
 export function EnhancedAppLayout({ 
   children, 
   currentPage, 
   onPageChange,
-  currentLanguage,
-  onLanguageChange,
   onUserChange
 }: EnhancedAppLayoutProps) {
+  const { currentLanguage, t, setLanguage, languageNames } = useTranslations();
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
@@ -292,7 +289,7 @@ export function EnhancedAppLayout({
                 {languages.map((lang) => (
                   <DropdownMenuItem
                     key={lang.code}
-                    onClick={() => onLanguageChange(lang.code)}
+                    onClick={() => setLanguage(lang.code)}
                     className={currentLanguage === lang.code ? 'bg-accent' : ''}
                   >
                     {lang.name}
@@ -351,7 +348,7 @@ export function EnhancedAppLayout({
             <SheetTrigger asChild>
               <button className="flex-1 flex flex-col items-center justify-center py-2 px-1 text-xs text-muted-foreground">
                 <MoreHorizontal className="size-5 mb-1" />
-                <span>More</span>
+                <span>{t('more')}</span>
               </button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[80vh]">
@@ -631,7 +628,7 @@ export function EnhancedAppLayout({
                 {languages.map((lang) => (
                   <DropdownMenuItem
                     key={lang.code}
-                    onClick={() => onLanguageChange(lang.code)}
+                    onClick={() => setLanguage(lang.code)}
                     className={currentLanguage === lang.code ? 'bg-accent' : ''}
                   >
                     {lang.name}
@@ -658,25 +655,25 @@ export function EnhancedAppLayout({
       <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Search className="size-5" />
-              Global Search
-            </DialogTitle>
-            <DialogDescription>
-              Search for pages, orders, staff, recipes, and more
-            </DialogDescription>
+                          <DialogTitle className="flex items-center gap-2">
+                <Search className="size-5" />
+                {t('search')}
+              </DialogTitle>
+              <DialogDescription>
+                {t('searchForPagesOrdersStaffRecipesAndMore')}
+              </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Type to search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-                autoFocus
-              />
+                              <Input
+                  placeholder={t('typeToSearch')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                  autoFocus
+                />
             </div>
             
             {searchQuery ? (

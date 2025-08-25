@@ -80,10 +80,16 @@ import {
   getCuisineDisplayName, 
   getAllergenIcon, 
   getAllergenDisplayName,
+  createRecipe,
+  updateRecipe,
+  deleteRecipe,
   type Recipe 
 } from '../../lib/recipes-data';
 import { Station } from '../../lib/types';
 import { toast } from "sonner@2.0.3";
+import { RecipeCreateModal } from '../modals/recipe-create-modal';
+import { RecipeEditModal } from '../modals/recipe-edit-modal';
+import { RecipeDeleteModal } from '../modals/recipe-delete-modal';
 
 interface RecipesProps {
   // No additional props needed for this demo
@@ -102,7 +108,11 @@ export function Recipes({}: RecipesProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isChecklistMode, setIsChecklistMode] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [scaleFactor, setScaleFactor] = useState([1]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [targetYield, setTargetYield] = useState('');
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [editNotes, setEditNotes] = useState('');
@@ -129,7 +139,7 @@ export function Recipes({}: RecipesProps) {
       if (selectedTags.length > 0 && !selectedTags.some(tag => recipe.tags.includes(tag))) return false;
       return true;
     });
-  }, [searchQuery, selectedCategory, selectedCuisine, selectedStation, selectedTags]);
+  }, [searchQuery, selectedCategory, selectedCuisine, selectedStation, selectedTags, refreshTrigger]);
 
   // Get scaled recipe for display
   const scaledRecipe = selectedRecipe ? scaleRecipe(selectedRecipe, scaleFactor[0]) : null;
@@ -145,7 +155,7 @@ export function Recipes({}: RecipesProps) {
   };
 
   const handleAddRecipe = () => {
-    toast.info('Add Recipe feature coming soon!');
+    setIsCreateModalOpen(true);
   };
 
   const handleEditRecipe = () => {
@@ -153,17 +163,13 @@ export function Recipes({}: RecipesProps) {
       toast.error('Only management can edit recipes');
       return;
     }
-    setIsEditMode(true);
-    toast.info('Edit Recipe feature coming soon!');
+    setIsEditModalOpen(true);
   };
 
   const handleDeleteRecipe = () => {
     if (!selectedRecipe || !isManagement) return;
     
-    toast.success(`Recipe "${selectedRecipe.name}" deleted successfully`);
-    setIsDeleteDialogOpen(false);
-    setIsDetailOpen(false);
-    setSelectedRecipe(null);
+    setIsDeleteModalOpen(true);
   };
 
   const handlePrintRecipe = () => {
@@ -207,6 +213,61 @@ export function Recipes({}: RecipesProps) {
     
     // In a real app, this would update the recipe
     toast.success('Notes updated successfully');
+  };
+
+  const handleCreateRecipe = (recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>) => {
+    try {
+      const newRecipe = createRecipe(recipeData);
+      toast.success(`Recipe "${newRecipe.name}" created successfully`);
+      // Refresh the recipes list by triggering a re-render
+      setRefreshTrigger(prev => prev + 1);
+    } catch (error) {
+      toast.error('Failed to create recipe');
+      console.error('Error creating recipe:', error);
+    }
+  };
+
+  const handleUpdateRecipe = (id: string, recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>) => {
+    try {
+      const updatedRecipe = updateRecipe(id, recipeData);
+      if (updatedRecipe) {
+        toast.success(`Recipe "${updatedRecipe.name}" updated successfully`);
+        // Update the selected recipe if it's the one being edited
+        if (selectedRecipe && selectedRecipe.id === id) {
+          setSelectedRecipe(updatedRecipe);
+        }
+        // Refresh the recipes list
+        setRefreshTrigger(prev => prev + 1);
+      } else {
+        toast.error('Failed to update recipe');
+      }
+    } catch (error) {
+      toast.error('Failed to update recipe');
+      console.error('Error updating recipe:', error);
+    }
+  };
+
+  const handleDeleteRecipeConfirm = (id: string) => {
+    try {
+      const recipeToDelete = getRecipeById(id);
+      if (recipeToDelete) {
+        const success = deleteRecipe(id);
+        if (success) {
+          toast.success(`Recipe "${recipeToDelete.name}" deleted successfully`);
+          // Close modals and reset state
+          setIsDeleteModalOpen(false);
+          setIsDetailOpen(false);
+          setSelectedRecipe(null);
+          // Refresh the recipes list
+          setRefreshTrigger(prev => prev + 1);
+        } else {
+          toast.error('Failed to delete recipe');
+        }
+      }
+    } catch (error) {
+      toast.error('Failed to delete recipe');
+      console.error('Error deleting recipe:', error);
+    }
   };
 
   const clearFilters = () => {
@@ -975,6 +1036,29 @@ export function Recipes({}: RecipesProps) {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Recipe Create Modal */}
+      <RecipeCreateModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreateRecipe={handleCreateRecipe}
+      />
+
+      {/* Recipe Edit Modal */}
+      <RecipeEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onUpdateRecipe={handleUpdateRecipe}
+        recipe={selectedRecipe}
+      />
+
+      {/* Recipe Delete Modal */}
+      <RecipeDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onDeleteRecipe={handleDeleteRecipeConfirm}
+        recipe={selectedRecipe}
+      />
     </>
   );
 }
