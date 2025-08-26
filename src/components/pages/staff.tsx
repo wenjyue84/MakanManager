@@ -66,13 +66,15 @@ import {
 import { Alert, AlertDescription } from '../ui/alert';
 import { Separator } from '../ui/separator';
 import { currentUser } from '../../lib/data';
-import { 
-  staffMembers, 
-  getStaffMemberById, 
-  updateStaffMember, 
-  getRoleDisplayName, 
+import {
+  staffMembers,
+  getStaffMemberById,
+  updateStaffMember,
+  addStaffMember,
+  deleteStaffMember,
+  getRoleDisplayName,
   getLanguageDisplayName,
-  type StaffMember 
+  type StaffMember
 } from '../../lib/staff-data';
 import { UserRole, Station } from '../../lib/types';
 import { toast } from 'sonner';
@@ -92,8 +94,9 @@ export function Staff({ onDisciplineClick }: StaffProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<Partial<StaffMember>>({});
-  const [addForm, setAddForm] = useState<Partial<StaffMember>>({
+  const initialAddForm: Partial<StaffMember> = {
     name: '',
     roles: ['staff'],
     gender: 'male',
@@ -107,7 +110,8 @@ export function Staff({ onDisciplineClick }: StaffProps) {
     completedTasks: 0,
     disciplinaryCount: 0,
     documents: []
-  });
+  };
+  const [addForm, setAddForm] = useState<Partial<StaffMember>>(initialAddForm);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   React.useEffect(() => {
@@ -144,7 +148,63 @@ export function Staff({ onDisciplineClick }: StaffProps) {
   };
 
   const handleAddStaff = () => {
-    toast.info('Add Staff feature coming soon!');
+    setIsAddStaffOpen(true);
+  };
+
+  const handleCreateStaff = () => {
+    const requiredFields = ['name', 'phone', 'startDate', 'emergencyContact'];
+    const missing = requiredFields.filter(field => {
+      if (field === 'emergencyContact') {
+        return !addForm.emergencyContact?.name || !addForm.emergencyContact?.phone;
+      }
+      return !addForm[field as keyof StaffMember];
+    });
+
+    if (missing.length > 0) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    const newId = (
+      Math.max(0, ...staffMembers.map(m => parseInt(m.id, 10))) + 1
+    ).toString();
+
+    const newMember: StaffMember = {
+      id: newId,
+      name: addForm.name!,
+      roles: (addForm.roles as UserRole[]) || ['staff'],
+      gender: addForm.gender as 'male' | 'female',
+      phone: addForm.phone!,
+      email: addForm.email,
+      startDate: addForm.startDate!,
+      emergencyContact: addForm.emergencyContact as { name: string; phone: string },
+      station: addForm.station as Station | undefined,
+      status: (addForm.status as 'active' | 'inactive') || 'active',
+      photo: addForm.photo || '',
+      languages: addForm.languages,
+      pointsThisMonth: addForm.pointsThisMonth || 0,
+      pointsYTD: addForm.pointsYTD || 0,
+      completedTasks: addForm.completedTasks || 0,
+      disciplinaryCount: addForm.disciplinaryCount || 0,
+      documents: []
+    };
+
+    addStaffMember(newMember);
+    setIsAddStaffOpen(false);
+    setAddForm(initialAddForm);
+    toast.success('Staff added successfully');
+  };
+
+  const handleDeleteStaff = () => {
+    if (!selectedStaff) return;
+    const success = deleteStaffMember(selectedStaff.id);
+    if (success) {
+      toast.success('Staff deleted successfully');
+    } else {
+      toast.error('Failed to delete staff member');
+    }
+    setIsDeleteDialogOpen(false);
+    setSelectedStaff(null);
   };
 
   const handleViewProfile = (member: StaffMember) => {
@@ -402,15 +462,27 @@ export function Staff({ onDisciplineClick }: StaffProps) {
                   <MoreHorizontal className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewProfile(member)}>
-                            <Eye className="size-4 mr-2" />
-                            View Profile
+              <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleViewProfile(member)}>
+                    <Eye className="size-4 mr-2" />
+                    View Profile
                 </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditProfile(member)}>
-                            <Edit className="size-4 mr-2" />
-                            Edit
+                  <DropdownMenuItem onClick={() => handleEditProfile(member)}>
+                    <Edit className="size-4 mr-2" />
+                    Edit
                 </DropdownMenuItem>
+                  {isManagement && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSelectedStaff(member);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <Trash2 className="size-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  )}
               </DropdownMenuContent>
             </DropdownMenu>
       </TableCell>
@@ -568,6 +640,181 @@ export function Staff({ onDisciplineClick }: StaffProps) {
                               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Staff Dialog */}
+      <Dialog open={isAddStaffOpen} onOpenChange={(open) => {
+        setIsAddStaffOpen(open);
+        if (!open) setAddForm(initialAddForm);
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Staff</DialogTitle>
+            <DialogDescription>Enter new staff details</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <div>
+              <Label>Name *</Label>
+              <Input
+                className="mt-1"
+                value={addForm.name}
+                onChange={(e) => setAddForm(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Gender *</Label>
+                <Select
+                  value={addForm.gender}
+                  onValueChange={(value) =>
+                    setAddForm(prev => ({ ...prev, gender: value as 'male' | 'female' }))
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Role *</Label>
+                <Select
+                  value={addForm.roles?.[0]}
+                  onValueChange={(value) =>
+                    setAddForm(prev => ({ ...prev, roles: [value as UserRole] }))
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="owner">Owner</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="head-of-kitchen">HoK</SelectItem>
+                    <SelectItem value="front-desk-manager">FDM</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Phone *</Label>
+              <Input
+                className="mt-1"
+                value={addForm.phone}
+                onChange={(e) => setAddForm(prev => ({ ...prev, phone: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label>Start Date *</Label>
+              <Input
+                type="date"
+                className="mt-1"
+                value={addForm.startDate}
+                onChange={(e) => setAddForm(prev => ({ ...prev, startDate: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Emergency Contact Name *</Label>
+                <Input
+                  className="mt-1"
+                  value={addForm.emergencyContact?.name}
+                  onChange={(e) =>
+                    setAddForm(prev => ({
+                      ...prev,
+                      emergencyContact: { ...prev.emergencyContact, name: e.target.value }
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <Label>Emergency Contact Phone *</Label>
+                <Input
+                  className="mt-1"
+                  value={addForm.emergencyContact?.phone}
+                  onChange={(e) =>
+                    setAddForm(prev => ({
+                      ...prev,
+                      emergencyContact: { ...prev.emergencyContact, phone: e.target.value }
+                    }))
+                  }
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Status *</Label>
+              <Select
+                value={addForm.status}
+                onValueChange={(value) =>
+                  setAddForm(prev => ({ ...prev, status: value as 'active' | 'inactive' }))
+                }
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Station</Label>
+              <Select
+                value={addForm.station}
+                onValueChange={(value) =>
+                  setAddForm(prev => ({ ...prev, station: value as Station }))
+                }
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select station" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kitchen">Kitchen</SelectItem>
+                  <SelectItem value="front">Front</SelectItem>
+                  <SelectItem value="store">Store</SelectItem>
+                  <SelectItem value="outdoor">Outdoor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddStaffOpen(false);
+                setAddForm(initialAddForm);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCreateStaff}>Add Staff</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Staff Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Staff</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {selectedStaff?.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteStaff}>
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
