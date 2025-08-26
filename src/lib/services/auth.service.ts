@@ -1,7 +1,6 @@
 import { LoginCredentials, User } from '../types';
 
-const ACCESS_KEY = 'makanmanager_access_token';
-const REFRESH_KEY = 'makanmanager_refresh_token';
+const SESSION_KEY = 'makanmanager_session_id';
 
 export class AuthService {
   static async login(
@@ -23,12 +22,8 @@ export class AuthService {
       }
 
       const data = await response.json();
-      if (data.accessToken) {
-        localStorage.setItem(ACCESS_KEY, data.accessToken);
-      }
-      if (data.refreshToken) {
-        localStorage.setItem(REFRESH_KEY, data.refreshToken);
-
+      if (data.sessionId) {
+        localStorage.setItem(SESSION_KEY, data.sessionId);
       }
 
       return { success: true, user: data.user };
@@ -37,9 +32,9 @@ export class AuthService {
     }
   }
 
-  static async validateToken(): Promise<{ valid: boolean; user?: User }> {
-    const refreshToken = localStorage.getItem(REFRESH_KEY);
-    if (!refreshToken) {
+  static async validateSession(): Promise<{ valid: boolean; user?: User }> {
+    const sessionId = localStorage.getItem(SESSION_KEY);
+    if (!sessionId) {
       return { valid: false };
     }
 
@@ -49,7 +44,7 @@ export class AuthService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken }),
+        body: JSON.stringify({ sessionId }),
       });
 
       if (!response.ok) {
@@ -57,9 +52,6 @@ export class AuthService {
       }
 
       const data = await response.json();
-      if (data.accessToken) {
-        localStorage.setItem(ACCESS_KEY, data.accessToken);
-      }
       if (data.user) {
         AuthService.storeUser(data.user);
         return { valid: true, user: data.user };
@@ -72,22 +64,21 @@ export class AuthService {
   }
 
   static async logout(): Promise<void> {
-    const refreshToken = localStorage.getItem(REFRESH_KEY);
+    const sessionId = localStorage.getItem(SESSION_KEY);
 
     try {
-      if (refreshToken) {
+      if (sessionId) {
         await fetch('/api/auth/logout', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ refreshToken }),
+          body: JSON.stringify({ sessionId }),
         });
       }
     } finally {
       localStorage.removeItem('makanmanager_user');
-      localStorage.removeItem(ACCESS_KEY);
-      localStorage.removeItem(REFRESH_KEY);
+      localStorage.removeItem(SESSION_KEY);
     }
   }
 

@@ -1,16 +1,34 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { authenticate, requireRole, requirePermission } = require('./middleware/rbac');
 
 const app = express();
 app.use(express.json());
 
-// In-memory user store. In a real application this would be a database.
+// Helper functions for password hashing
+function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
+  const hash = crypto
+    .pbkdf2Sync(password, salt, 10000, 64, 'sha512')
+    .toString('hex');
+  return { salt, hash };
+}
+
+function sanitizeUser(user) {
+  const { passwordHash, salt, ...safeUser } = user;
+  return safeUser;
+}
+
+function createUser(user) {
+  const { salt, hash } = hashPassword('password123');
+  return { ...user, salt, passwordHash: hash };
+}
+
+// In-memory user store. In production this would be a database.
 const users = [
-  {
+  createUser({
     id: '1',
     name: 'Jay',
     email: 'jay@makanmanager.com',
-    password: 'password123',
     roles: ['owner'],
     avatar: '👨‍💼',
     phone: '+60123456789',
@@ -22,12 +40,11 @@ const users = [
     points: 2500,
     weeklyPoints: 350,
     monthlyPoints: 1200,
-  },
-  {
+  }),
+  createUser({
     id: '2',
     name: 'Simon',
     email: 'simon@makanmanager.com',
-    password: 'password123',
     roles: ['manager'],
     avatar: '👨‍💻',
     phone: '+60123456791',
@@ -39,12 +56,11 @@ const users = [
     points: 2200,
     weeklyPoints: 320,
     monthlyPoints: 1100,
-  },
-  {
+  }),
+  createUser({
     id: '3',
     name: 'Lily',
     email: 'lily@makanmanager.com',
-    password: 'password123',
     roles: ['head-of-kitchen'],
     avatar: '👩‍🍳',
     phone: '+60123456793',
@@ -56,58 +72,67 @@ const users = [
     points: 2100,
     weeklyPoints: 300,
     monthlyPoints: 1050,
-  },
+  }),
 ];
 
-// Secrets for JWT signing. In production, keep these in environment variables.
-const JWT_SECRET = 'secret';
-const REFRESH_SECRET = 'refreshSecret';
-let refreshTokens = [];
+// Session management
+const sessions = new Map();
+const SESSION_TTL = 15 * 60 * 1000; // 15 minutes
 
-// Login endpoint – verifies credentials and returns tokens.
+app.locals.sessions = sessions;
+app.locals.users = users;
+app.locals.sessionTTL = SESSION_TTL;
+
+// Login endpoint – verifies credentials and returns a session ID
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
-  const user = users.find(
-    (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-  );
-
+  const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
   if (!user) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
 
-  const accessToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '15m' });
-  const refreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET, { expiresIn: '7d' });
-  refreshTokens.push(refreshToken);
+  const hash = crypto
+    .pbkdf2Sync(password, user.salt, 10000, 64, 'sha512')
+    .toString('hex');
+  if (hash !== user.passwordHash) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
 
-  res.json({ accessToken, refreshToken, user });
+  const sessionId = crypto.randomBytes(30).toString('hex');
+  sessions.set(sessionId, { userId: user.id, expiresAt: Date.now() + SESSION_TTL });
+
+  res.json({ sessionId, user: sanitizeUser(user) });
 });
 
-// Refresh endpoint – validates refresh token and issues a new access token.
+// Refresh endpoint – validates session and extends its TTL
 app.post('/api/auth/refresh', (req, res) => {
-  const { refreshToken } = req.body;
-  if (!refreshToken || !refreshTokens.includes(refreshToken)) {
-    return res.status(401).json({ message: 'Invalid refresh token' });
+  const { sessionId } = req.body;
+  const session = sessions.get(sessionId);
+  if (!session || session.expiresAt < Date.now()) {
+    sessions.delete(sessionId);
+    return res.status(401).json({ message: 'Invalid session' });
   }
 
-  try {
-    const payload = jwt.verify(refreshToken, REFRESH_SECRET);
-    const user = users.find((u) => u.id === payload.id);
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
-    }
-
-    const accessToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '15m' });
-    res.json({ accessToken, user });
-  } catch {
-    res.status(401).json({ message: 'Invalid refresh token' });
-  }
+  session.expiresAt = Date.now() + SESSION_TTL;
+  const user = users.find((u) => u.id === session.userId);
+  res.json({ user: sanitizeUser(user) });
 });
 
-// Logout endpoint – invalidates the provided refresh token.
+// Logout endpoint – invalidates the session
 app.post('/api/auth/logout', (req, res) => {
-  const { refreshToken } = req.body;
-  refreshTokens = refreshTokens.filter((t) => t !== refreshToken);
+  const { sessionId } = req.body;
+  sessions.delete(sessionId);
   res.json({ success: true });
+});
+
+// Example protected route requiring authentication and role check
+app.get('/api/users', authenticate, requireRole('owner', 'manager'), (req, res) => {
+  res.json(users.map(sanitizeUser));
+});
+
+// Example permission-protected route
+app.get('/api/reports', authenticate, requirePermission('view_reports'), (req, res) => {
+  res.json({ reports: [] });
 });
 
 // Start server only if this file is run directly

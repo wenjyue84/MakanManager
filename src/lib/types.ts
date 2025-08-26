@@ -10,7 +10,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  password: string; // In production, this should be hashed
+  password?: string; // Not returned by the authentication API
   roles: UserRole[];
   avatar?: string;
   gender: 'male' | 'female';
