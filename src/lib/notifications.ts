@@ -19,12 +19,27 @@ interface ReminderOptions {
 }
 
 export async function scheduleReminder(options: ReminderOptions) {
+  const quietStart = 22; // 22:00
+  const quietEnd = 8; // 08:00
+  const date = new Date(options.timestamp);
+  const hour = date.getHours();
+  if (hour >= quietStart || hour < quietEnd) {
+    if (hour >= quietStart) {
+      date.setDate(date.getDate() + 1);
+    }
+    date.setHours(quietEnd, 0, 0, 0);
+  }
   if (!('serviceWorker' in navigator)) return;
+  if (Notification.permission !== 'granted') {
+    const granted = await requestNotificationPermission();
+    if (!granted) return;
+  }
+
   const registration = await navigator.serviceWorker.ready;
   registration.active?.postMessage({
     type: 'schedule-reminder',
     title: options.title,
     options: { body: options.body },
-    timestamp: options.timestamp,
+    timestamp: date.getTime(),
   });
 }

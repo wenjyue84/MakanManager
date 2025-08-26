@@ -39,6 +39,7 @@ model Task {
   assignee    Staff?   @relation("StaffTasks", fields: [assigneeId], references: [id])
 }
 
+
 model Recipe {
   id            String   @id @default(uuid())
   name          String
@@ -57,4 +58,5 @@ model Recipe {
   updatedBy     String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
 }
