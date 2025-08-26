@@ -25,6 +25,7 @@ import { ReportsPage } from "./components/pages/reports";
 import { TaskDetailModal } from "./components/modals/task-detail-modal";
 import { TaskCreateModal } from "./components/modals/task-create-modal";
 import { TaskManagementDemo } from "./components/pages/task-management-demo";
+import { DisciplinePage } from "./components/pages/discipline";
 import { Task } from "./lib/types";
 import { users } from "./lib/data";
 import { Toaster } from "./components/ui/sonner";
@@ -37,6 +38,7 @@ function AppContent() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -105,9 +107,7 @@ function AppContent() {
   };
 
   const handleCreateDiscipline = () => {
-    toast.info(
-      "Create Disciplinary Action feature coming soon!",
-    );
+    navigate('/discipline');
   };
 
   const handleNewOrder = () => toast.info("New Order feature coming soon!");
@@ -193,6 +193,7 @@ function AppContent() {
                   <Route path="/staff-meal" element={<StaffMealPage />} />
                   <Route path="/disposal" element={<DisposalPage />} />
                   <Route path="/issues" element={<IssuesPage />} />
+                  <Route path="/discipline" element={<DisciplinePage />} />
                   <Route path="/purchase-list" element={<PurchaseListPage />} />
                   <Route path="/skills" element={<SkillsPage />} />
                   <Route path="/suppliers" element={<SuppliersPage />} />
@@ -240,6 +241,7 @@ function AppContent() {
             <Route path="/staff-meal" element={<StaffMealPage />} />
             <Route path="/disposal" element={<DisposalPage />} />
             <Route path="/issues" element={<IssuesPage />} />
+            <Route path="/discipline" element={<DisciplinePage />} />
             <Route path="/purchase-list" element={<PurchaseListPage />} />
             <Route path="/skills" element={<SkillsPage />} />
             <Route path="/suppliers" element={<SuppliersPage />} />
