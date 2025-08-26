@@ -7,7 +7,7 @@ import fs from 'fs';
 function serveServiceWorker() {
   return {
     name: 'serve-sw',
-    apply: 'serve' as const,
+    apply: 'serve',
     configureServer(server: any) {
       server.middlewares.use((req: any, res: any, next: any) => {
         if (req.url === '/sw.js') {
@@ -66,18 +66,19 @@ export default defineConfig({
         '@': path.resolve(__dirname, './src'),
       },
     },
-  build: {
-    target: 'esnext',
-    outDir: 'build',
-  },
-  server: {
-    port: 3000,
-    open: true,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
+    build: {
+      target: 'esnext',
+      outDir: 'build',
+    },
+    server: {
+      port: 3000,
+      open: true,
+      historyApiFallback: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
       },
     },
-  },
 });
