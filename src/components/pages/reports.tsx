@@ -40,7 +40,7 @@ import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Separator } from '../ui/separator';
-import { currentUser } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 
 // Sample data for charts
 const disposalData = [
@@ -116,7 +116,13 @@ export function ReportsPage() {
   const [selectedMetric, setSelectedMetric] = useState('all');
   const [dateRange, setDateRange] = useState('last8weeks');
 
-  const isManagement = currentUser.roles.some(role => 
+  const { user: currentUser, isLoading } = useCurrentUser();
+
+  if (isLoading || !currentUser) {
+    return <div>Loading...</div>;
+  }
+
+  const isManagement = currentUser.roles.some(role =>
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 

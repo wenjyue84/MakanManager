@@ -55,7 +55,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
-import { currentUser } from '../../lib/data';
+import { useCurrentUserWithFallback } from '../../lib/hooks/use-current-user';
 import { staffMembers } from '../../lib/staff-data';
 import { 
   cashReconciliations,
@@ -89,6 +89,7 @@ import {
 } from '../../lib/cash-export';
 
 export function CashPage() {
+  const { user: currentUser } = useCurrentUserWithFallback();
   const [activeTab, setActiveTab] = useState('reconciliation');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedShift, setSelectedShift] = useState<string>('');

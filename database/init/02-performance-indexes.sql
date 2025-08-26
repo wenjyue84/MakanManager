@@ -146,6 +146,11 @@ INCLUDE (type, points, reason);
 -- Index for management reporting
 CREATE INDEX idx_disciplinary_creator_type ON disciplinary_actions(created_by_id, type, created_at DESC);
 
+-- ==================== POINT ENTRIES INDEXES ====================
+
+-- Index for tracking daily point budget usage by manager
+CREATE INDEX idx_point_entries_manager_date ON point_entries(manager_id, created_at DESC);
+
 -- ==================== CASH RECONCILIATION INDEXES ====================
 
 -- Index for reconciliation tracking and analysis

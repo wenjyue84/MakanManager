@@ -65,7 +65,7 @@ import {
 } from '../ui/dialog';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Separator } from '../ui/separator';
-import { currentUser } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import {
   staffMembers,
   getStaffMemberById,
@@ -115,13 +115,19 @@ export function Staff({ onDisciplineClick }: StaffProps) {
   const [newDocType, setNewDocType] = useState<'passport' | 'ic' | 'contract' | 'certificate'>('passport');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  const { user: currentUser, isLoading } = useCurrentUser();
+
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isManagement = currentUser.roles.some(role => 
+  if (isLoading || !currentUser) {
+    return <div>Loading...</div>;
+  }
+
+  const isManagement = currentUser.roles.some(role =>
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 

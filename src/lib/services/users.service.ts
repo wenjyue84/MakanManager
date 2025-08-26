@@ -1,3 +1,4 @@
+
 import { query } from '../database';
 import { User, UserRole, UserDocument } from '../types';
 
@@ -206,12 +207,16 @@ export class UsersService {
     `, values);
 
     return result.rows.length > 0 ? this.mapRowToUser(result.rows[0]) : null;
+
   }
 
-  async deleteUser(id: string): Promise<boolean> {
-    const result = await query('DELETE FROM users WHERE id = $1', [id]);
-    return result.rowCount > 0;
+  updateUser(id: string, user: Partial<User>): Promise<User> {
+    return this.request<User>(`/api/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(user),
+    });
   }
+
 
   async getUsersByRole(role: UserRole): Promise<User[]> {
     const result = await query(`
@@ -349,7 +354,9 @@ export class UsersService {
       weeklyPoints: parseInt(row.weeklyPoints) || 0,
       monthlyPoints: parseInt(row.monthlyPoints) || 0
     };
+
   }
 }
 
 export const usersService = new UsersService();
+export default UsersService;

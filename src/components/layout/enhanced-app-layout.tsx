@@ -64,7 +64,8 @@ import {
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
-import { currentUser, users } from '../../lib/data';
+import { users } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import { getUnreadCount } from '../../lib/notifications-data';
 import { useTranslations } from '../../lib/hooks/use-translations';
 
@@ -89,6 +90,7 @@ export function EnhancedAppLayout({
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations']); // Operations expanded by default
   const [pinnedItems, setPinnedItems] = useState<string[]>(['dashboard', 'online-orders', 'cash']); // Default pinned items
   const [recentItems, setRecentItems] = useState<string[]>(['tasks', 'staff']);
+  const { user: currentUser, isLoading } = useCurrentUser();
 
   // Navigation groups with logical organization
   const navigationGroups = [
@@ -211,9 +213,9 @@ export function EnhancedAppLayout({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Don't render until mounted to avoid hydration issues
-  if (!mounted) {
-    return <div className="h-screen bg-background" />; 
+  // Don't render until mounted and user loaded to avoid hydration issues
+  if (!mounted || isLoading || !currentUser) {
+    return <div className="h-screen bg-background" />;
   }
 
   const isManagement = currentUser.roles.some(role => 

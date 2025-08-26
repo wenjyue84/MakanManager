@@ -37,5 +37,17 @@ services:
     profiles:
       - admin
 
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://makan_user:makan_password@postgres:5432/makan_moments
+      PORT: 4000
+    ports:
+      - '4000:4000'
+    depends_on:
+      - postgres
+
 volumes:
   postgres_data:

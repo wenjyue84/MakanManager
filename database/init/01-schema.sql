@@ -73,6 +73,17 @@ CREATE TABLE disciplinary_actions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Point Entries table
+CREATE TABLE point_entries (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    manager_id UUID NOT NULL REFERENCES users(id),
+    target_user_id UUID NOT NULL REFERENCES users(id),
+    source_type VARCHAR(50) NOT NULL,
+    source_id UUID,
+    points INTEGER NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Recipes table
 CREATE TABLE recipes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

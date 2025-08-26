@@ -52,7 +52,7 @@ import {
   DialogTitle
 } from '../ui/dialog';
 import { Separator } from '../ui/separator';
-import { currentUser } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import { staffMembers } from '../../lib/staff-data';
 import { managementBudgets } from '../../lib/data';
 import { 
@@ -75,6 +75,8 @@ export function IssuesPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isApprovalOpen, setIsApprovalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  const { user: currentUser, isLoading } = useCurrentUser();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -100,7 +102,11 @@ export function IssuesPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isManagement = currentUser.roles.some(role => 
+  if (isLoading || !currentUser) {
+    return <div>Loading...</div>;
+  }
+
+  const isManagement = currentUser.roles.some(role =>
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 
@@ -194,10 +200,10 @@ export function IssuesPage() {
 
     const totalExtra = Math.abs(approvalData.managerExtra) + Math.abs(approvalData.ownerExtra);
     
-    if (totalExtra > currentBudget) {
-      toast.error(`Insufficient budget. You have RM${currentBudget} remaining today.`);
-      return;
-    }
+  if (totalExtra > currentBudget) {
+    toast.error(`Insufficient budget. You have RM${currentBudget} remaining today.`);
+    return;
+  }
 
     const totalPoints =
       selectedIssue.defaultPoints + approvalData.managerExtra + approvalData.ownerExtra;
@@ -213,8 +219,11 @@ export function IssuesPage() {
       updatedAt: new Date().toISOString(),
     };
 
-    setIssueList(prev => prev.map(i => (i.id === selectedIssue.id ? updatedIssue : i)));
-    setSelectedIssue(updatedIssue);
+  setIssueList(prev => prev.map(i => (i.id === selectedIssue.id ? updatedIssue : i)));
+  setSelectedIssue(updatedIssue);
+
+  // Deduct from management daily budget
+  managementBudgets.set(currentUser.id, currentBudget - totalExtra);
 
     toast.success(
       `Issue ${approvalData.newStatus}. ${Math.abs(totalPoints)} points applied.`,
