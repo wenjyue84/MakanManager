@@ -16,13 +16,13 @@ args = "Server"
 name = "Server"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npx vite --host 0.0.0.0 --port 5000"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "DANGEROUSLY_DISABLE_HOST_CHECK=true npx vite --host 0.0.0.0 --port 5000"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000
