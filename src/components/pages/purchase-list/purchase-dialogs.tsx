@@ -41,11 +41,14 @@ interface PurchaseDialogsProps {
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
   isManagement: boolean;
+  purchasingPerm: boolean;
   suppliers: Supplier[];
   onSave: () => void;
   onMarkAsPurchased: () => void;
   onDelete: () => void;
   onEdit: (item: PurchaseItem) => void;
+  onReview: (item: PurchaseItem) => void;
+  onOrder: (item: PurchaseItem) => void;
 }
 
 export function PurchaseDialogs({
@@ -65,11 +68,14 @@ export function PurchaseDialogs({
   isDeleteDialogOpen,
   setIsDeleteDialogOpen,
   isManagement,
+  purchasingPerm,
   suppliers,
   onSave,
   onMarkAsPurchased,
   onDelete,
-  onEdit
+  onEdit,
+  onReview,
+  onOrder
 }: PurchaseDialogsProps) {
   const getUserById = (id: string) => {
     return staffMembers.find(member => member.id === id);
@@ -150,9 +156,25 @@ export function PurchaseDialogs({
               </div>
 
               <DialogFooter>
+                {purchasingPerm && selectedItem.status === 'new' && (
+                  <Button
+                    variant="outline"
+                    onClick={() => onReview(selectedItem)}
+                  >
+                    Mark Reviewed
+                  </Button>
+                )}
+                {purchasingPerm && selectedItem.status === 'reviewed' && (
+                  <Button
+                    variant="outline"
+                    onClick={() => onOrder(selectedItem)}
+                  >
+                    Mark Ordered
+                  </Button>
+                )}
                 {selectedItem.status !== 'purchased' && isManagement && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setIsDetailOpen(false);
                       setIsPurchaseOpen(true);

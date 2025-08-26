@@ -18,21 +18,27 @@ import {
 interface PurchaseTableRowProps {
   item: PurchaseItem;
   isManagement: boolean;
+  purchasingPerm: boolean;
   onView: (item: PurchaseItem) => void;
   onEdit: (item: PurchaseItem) => void;
   onDelete: (item: PurchaseItem) => void;
   onMarkAsPurchased: (item: PurchaseItem) => void;
+  onReview: (item: PurchaseItem) => void;
+  onOrder: (item: PurchaseItem) => void;
   onOpenDetail: () => void;
 }
 
 export function PurchaseTableRow({ 
   item, 
-  isManagement, 
-  onView, 
-  onEdit, 
-  onDelete, 
-  onMarkAsPurchased, 
-  onOpenDetail 
+  isManagement,
+  purchasingPerm,
+  onView,
+  onEdit,
+  onDelete,
+  onMarkAsPurchased,
+  onReview,
+  onOrder,
+  onOpenDetail
 }: PurchaseTableRowProps) {
   const handleRowClick = () => {
     onView(item);
@@ -91,9 +97,33 @@ export function PurchaseTableRow({
             <Eye className="size-3 mr-1" />
             View
           </Button>
+          {purchasingPerm && item.status === 'new' && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                onReview(item);
+              }}
+            >
+              Review
+            </Button>
+          )}
+          {purchasingPerm && item.status === 'reviewed' && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOrder(item);
+              }}
+            >
+              Order
+            </Button>
+          )}
           {item.status !== 'purchased' && isManagement && (
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="outline"
               onClick={(e) => {
                 e.stopPropagation();

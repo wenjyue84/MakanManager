@@ -10,26 +10,18 @@ import { PurchaseItemCard } from './purchase-list/purchase-item-card';
 import { PurchaseTableRow } from './purchase-list/purchase-table-row';
 import { PurchaseDialogs } from './purchase-list/purchase-dialogs';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '../ui/table';
-import { 
-  purchaseItems,
-  addPurchaseItem,
-  updatePurchaseItem,
-  deletePurchaseItem,
-  markItemAsPurchased,
-  getActiveSuppliers,
-  type PurchaseItem 
-} from '../../lib/operations-data';
+import { getActiveSuppliers, type PurchaseItem } from '../../lib/operations-data';
 import {
   filterPurchaseItems,
   calculatePurchaseStats,
-  getUniqueCategories,
   getUniqueSuppliers,
   initializePurchaseForm,
   initializePurchaseData,
   validatePurchaseItem,
   validatePurchaseData
 } from '../../lib/purchase-list-helpers';
-import { toast } from "sonner@2.0.3";
+import { PurchaseItemsService } from '../../lib/services/purchase-items.service';
+import { toast } from 'sonner@2.0.3';
 
 export function PurchaseListPage() {
   // State for filters
@@ -49,6 +41,7 @@ export function PurchaseListPage() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [formData, setFormData] = useState(initializePurchaseForm());
   const [purchaseData, setPurchaseData] = useState(initializePurchaseData());
+  const [items, setItems] = useState<PurchaseItem[]>([]);
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -56,30 +49,42 @@ export function PurchaseListPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const { user: currentUser, isLoading } = useCurrentUser();
 
-  if (isLoading || !currentUser) {
-    return <div>Loading...</div>;
-  }
+  React.useEffect(() => {
+    PurchaseItemsService.getAllItems().then(setItems).catch(() => {
+      toast.error('Failed to load purchase items');
+    });
+  }, []);
+
 
   const isManagement = currentUser.roles.some(role =>
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
+  const purchasingPerm = currentUser.roles.some(role =>
+    ['owner', 'manager', 'head-of-kitchen'].includes(role)
+  );
+  const activeSuppliers = useMemo(() => getActiveSuppliers(), []);
 
   // Computed values
   const filteredItems = useMemo(() => {
-    return filterPurchaseItems(purchaseItems, {
+    return filterPurchaseItems(items, {
       searchQuery,
       selectedCategory,
       selectedStatus,
       selectedUrgency,
       selectedSupplier
     });
-  }, [searchQuery, selectedCategory, selectedStatus, selectedUrgency, selectedSupplier]);
+  }, [items, searchQuery, selectedCategory, selectedStatus, selectedUrgency, selectedSupplier]);
 
-  const stats = useMemo(() => calculatePurchaseStats(purchaseItems), []);
-  const categories = getUniqueCategories(purchaseItems);
-  const supplierNames = getUniqueSuppliers(purchaseItems);
+  const stats = useMemo(() => calculatePurchaseStats(items), [items]);
+  const supplierNames = getUniqueSuppliers(items);
+
+  const itemsBySupplier = useMemo(() => {
+    return filteredItems.reduce((acc, item) => {
+      (acc[item.preferredSupplier] ||= []).push(item);
+      return acc;
+    }, {} as Record<string, PurchaseItem[]>);
+  }, [filteredItems]);
 
   const hasActiveFilters = searchQuery || selectedCategory !== 'all' || 
     selectedStatus !== 'all' || selectedUrgency !== 'all' || selectedSupplier !== 'all';
@@ -106,67 +111,115 @@ export function PurchaseListPage() {
     setIsEditOpen(true);
   };
 
-  const handleSaveItem = () => {
+  const handleSaveItem = async () => {
     if (!validatePurchaseItem(formData)) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    if (isEditOpen && selectedItem) {
-      const updated = updatePurchaseItem(selectedItem.id, formData);
-      if (updated) {
-        toast.success(`Item "${formData.itemName}" updated successfully`);
-        setIsEditOpen(false);
-        setSelectedItem(null);
+    try {
+      if (isEditOpen && selectedItem) {
+        const updated = await PurchaseItemsService.updateItem(selectedItem.id, formData);
+        if (updated) {
+          setItems(prev => prev.map(it => (it.id === updated.id ? updated : it)));
+          toast.success(`Item "${formData.itemName}" updated successfully`);
+          setIsEditOpen(false);
+          setSelectedItem(null);
+        }
       } else {
-        toast.error('Failed to update item');
+        const created = await PurchaseItemsService.createItem(formData);
+        setItems(prev => [created, ...prev]);
+        toast.success(`Item "${formData.itemName}" added to purchase list`);
+        setIsCreateOpen(false);
       }
-    } else {
-      addPurchaseItem({
-        ...formData,
-        addedBy: currentUser.id,
-        createdAt: new Date().toISOString()
-      });
-      toast.success(`Item "${formData.itemName}" added to purchase list`);
-      setIsCreateOpen(false);
+    } catch {
+      toast.error('Failed to save item');
     }
   };
 
-  const handleMarkAsPurchased = () => {
+  const handleMarkAsPurchased = async () => {
     if (!selectedItem || !validatePurchaseData(purchaseData)) {
       toast.error('Please enter a valid price');
       return;
     }
 
-    const updated = markItemAsPurchased(
-      selectedItem.id, 
-      purchaseData.price, 
-      purchaseData.date, 
-      currentUser.id
-    );
-    
-    if (updated) {
-      toast.success(`Item marked as purchased! Cost: RM${purchaseData.price.toFixed(2)}`);
-      setIsPurchaseOpen(false);
-      setIsDetailOpen(false);
-      setPurchaseData(initializePurchaseData());
-    } else {
+    try {
+      const updated = await PurchaseItemsService.updateStatus(selectedItem.id, 'purchased', {
+        price: purchaseData.price,
+        date: purchaseData.date,
+        staffId: currentUser.id
+      });
+      if (updated) {
+        setItems(prev => prev.map(it => (it.id === updated.id ? updated : it)));
+        toast.success(`Item marked as purchased! Cost: RM${purchaseData.price.toFixed(2)}`);
+        setIsPurchaseOpen(false);
+        setIsDetailOpen(false);
+        setPurchaseData(initializePurchaseData());
+      }
+    } catch {
       toast.error('Failed to mark item as purchased');
     }
   };
 
-  const handleDeleteItem = () => {
+  const handleDeleteItem = async () => {
     if (!selectedItem) return;
-    
-    const success = deletePurchaseItem(selectedItem.id);
-    if (success) {
-      toast.success(`Item "${selectedItem.itemName}" removed from purchase list`);
-      setIsDeleteDialogOpen(false);
-      setIsDetailOpen(false);
-      setSelectedItem(null);
-    } else {
+
+    try {
+      const success = await PurchaseItemsService.deleteItem(selectedItem.id);
+      if (success) {
+        setItems(prev => prev.filter(i => i.id !== selectedItem.id));
+        toast.success(`Item "${selectedItem.itemName}" removed from purchase list`);
+        setIsDeleteDialogOpen(false);
+        setIsDetailOpen(false);
+        setSelectedItem(null);
+      }
+    } catch {
       toast.error('Failed to delete item');
     }
+  };
+
+  const handleReviewItem = async (item: PurchaseItem) => {
+    if (!purchasingPerm) {
+      toast.error('You do not have permission to review items');
+      return;
+    }
+    const updated = await PurchaseItemsService.updateStatus(item.id, 'reviewed', {
+      staffId: currentUser.id
+    });
+    if (updated) {
+      setItems(prev => prev.map(it => (it.id === updated.id ? updated : it)));
+    }
+  };
+
+  const handleOrderItem = async (item: PurchaseItem) => {
+    if (!purchasingPerm) {
+      toast.error('You do not have permission to order items');
+      return;
+    }
+    const updated = await PurchaseItemsService.updateStatus(item.id, 'ordered', {
+      date: new Date().toISOString(),
+      staffId: currentUser.id
+    });
+    if (updated) {
+      setItems(prev => prev.map(it => (it.id === updated.id ? updated : it)));
+    }
+  };
+
+  const handleWhatsAppSupplier = (supplier: string) => {
+    const info = activeSuppliers.find(
+      s => s.displayName === supplier || s.companyName === supplier
+    );
+    const phone = info?.picContactNumber || info?.contactNumber;
+    if (!phone) {
+      toast.error('No contact number for supplier');
+      return;
+    }
+    const lines = itemsBySupplier[supplier].map(
+      it => `- ${it.itemName} (${it.quantity} ${it.unit})`
+    );
+    const message = `Order Request for ${supplier}:\n${lines.join('\n')}`;
+    const url = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
   };
 
   const clearFilters = () => {
@@ -225,67 +278,83 @@ export function PurchaseListPage() {
               </div>
             </div>
           ) : (
-            <>
-              {isMobile ? (
-                <div className="grid gap-4">
-                  {filteredItems.map((item) => (
-                    <PurchaseItemCard 
-                      key={item.id} 
-                      item={item}
-                      isManagement={isManagement}
-                      onView={setSelectedItem}
-                      onEdit={handleEditItem}
-                      onDelete={(item) => {
-                        setSelectedItem(item);
-                        setIsDeleteDialogOpen(true);
-                      }}
-                      onMarkAsPurchased={(item) => {
-                        setSelectedItem(item);
-                        setIsPurchaseOpen(true);
-                      }}
-                      onOpenDetail={() => setIsDetailOpen(true)}
-                    />
-                  ))}
+            Object.entries(itemsBySupplier).map(([supplier, supplierItems]) => (
+              <div key={supplier} className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold">{supplier}</h3>
+                  {purchasingPerm && (
+                    <Button size="sm" onClick={() => handleWhatsAppSupplier(supplier)}>
+                      WhatsApp
+                    </Button>
+                  )}
                 </div>
-              ) : (
-                <div className="border rounded-lg">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Quantity</TableHead>
-                        <TableHead>Supplier</TableHead>
-                        <TableHead>Urgency</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Cost</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredItems.map((item) => (
-                        <PurchaseTableRow 
-                          key={item.id} 
-                          item={item}
-                          isManagement={isManagement}
-                          onView={setSelectedItem}
-                          onEdit={handleEditItem}
-                          onDelete={(item) => {
-                            setSelectedItem(item);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                          onMarkAsPurchased={(item) => {
-                            setSelectedItem(item);
-                            setIsPurchaseOpen(true);
-                          }}
-                          onOpenDetail={() => setIsDetailOpen(true)}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </>
+                {isMobile ? (
+                  <div className="grid gap-4">
+                    {supplierItems.map((item) => (
+                      <PurchaseItemCard
+                        key={item.id}
+                        item={item}
+                        isManagement={isManagement}
+                        purchasingPerm={purchasingPerm}
+                        onView={setSelectedItem}
+                        onEdit={handleEditItem}
+                        onDelete={(item) => {
+                          setSelectedItem(item);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                        onMarkAsPurchased={(item) => {
+                          setSelectedItem(item);
+                          setIsPurchaseOpen(true);
+                        }}
+                        onReview={handleReviewItem}
+                        onOrder={handleOrderItem}
+                        onOpenDetail={() => setIsDetailOpen(true)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="border rounded-lg">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Item</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Quantity</TableHead>
+                          <TableHead>Supplier</TableHead>
+                          <TableHead>Urgency</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Cost</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {supplierItems.map((item) => (
+                          <PurchaseTableRow
+                            key={item.id}
+                            item={item}
+                            isManagement={isManagement}
+                            purchasingPerm={purchasingPerm}
+                            onView={setSelectedItem}
+                            onEdit={handleEditItem}
+                            onDelete={(item) => {
+                              setSelectedItem(item);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                            onMarkAsPurchased={(item) => {
+                              setSelectedItem(item);
+                              setIsPurchaseOpen(true);
+                            }}
+                            onReview={handleReviewItem}
+                            onOrder={handleOrderItem}
+                            onOpenDetail={() => setIsDetailOpen(true)}
+                          />
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+            ))
           )}
         </div>
       </div>
@@ -308,11 +377,14 @@ export function PurchaseListPage() {
         isDeleteDialogOpen={isDeleteDialogOpen}
         setIsDeleteDialogOpen={setIsDeleteDialogOpen}
         isManagement={isManagement}
+        purchasingPerm={purchasingPerm}
         suppliers={getActiveSuppliers()}
         onSave={handleSaveItem}
         onMarkAsPurchased={handleMarkAsPurchased}
         onDelete={handleDeleteItem}
         onEdit={handleEditItem}
+        onReview={handleReviewItem}
+        onOrder={handleOrderItem}
       />
     </>
   );

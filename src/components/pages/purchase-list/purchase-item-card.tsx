@@ -20,21 +20,27 @@ import {
 interface PurchaseItemCardProps {
   item: PurchaseItem;
   isManagement: boolean;
+  purchasingPerm: boolean;
   onView: (item: PurchaseItem) => void;
   onEdit: (item: PurchaseItem) => void;
   onDelete: (item: PurchaseItem) => void;
   onMarkAsPurchased: (item: PurchaseItem) => void;
+  onReview: (item: PurchaseItem) => void;
+  onOrder: (item: PurchaseItem) => void;
   onOpenDetail: () => void;
 }
 
 export function PurchaseItemCard({ 
   item, 
-  isManagement, 
-  onView, 
-  onEdit, 
-  onDelete, 
-  onMarkAsPurchased, 
-  onOpenDetail 
+  isManagement,
+  purchasingPerm,
+  onView,
+  onEdit,
+  onDelete,
+  onMarkAsPurchased,
+  onReview,
+  onOrder,
+  onOpenDetail
 }: PurchaseItemCardProps) {
   const addedBy = staffMembers.find(member => member.id === item.addedBy);
   
@@ -96,10 +102,34 @@ export function PurchaseItemCard({
               <span>Added by {addedBy?.name}</span>
             </div>
             <div className="flex items-center gap-1">
+              {purchasingPerm && item.status === 'new' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReview(item);
+                  }}
+                >
+                  Review
+                </Button>
+              )}
+              {purchasingPerm && item.status === 'reviewed' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOrder(item);
+                  }}
+                >
+                  Order
+                </Button>
+              )}
               {item.status !== 'purchased' && isManagement && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
                     onMarkAsPurchased(item);
