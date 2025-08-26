@@ -71,7 +71,7 @@ import {
 } from '../ui/dialog';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Separator } from '../ui/separator';
-import { currentUser } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import {
   scaleRecipe,
   getCategoryDisplayName,
@@ -118,6 +118,8 @@ export function Recipes({}: RecipesProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [recipesList, setRecipesList] = useState<Recipe[]>([]);
 
+  const { user: currentUser, isLoading: userLoading } = useCurrentUser();
+
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
@@ -140,7 +142,11 @@ export function Recipes({}: RecipesProps) {
     fetchRecipes();
   }, [refreshTrigger]);
 
-  const isManagement = currentUser.roles.some(role => 
+  if (userLoading || !currentUser) {
+    return <div>Loading...</div>;
+  }
+
+  const isManagement = currentUser.roles.some(role =>
     ['owner', 'manager', 'head-of-kitchen'].includes(role)
   );
 
