@@ -138,8 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Logout function
-  const logout = () => {
-    AuthService.logout();
+  const logout = async () => {
+    await AuthService.logout();
     dispatch({ type: 'LOGOUT' });
   };
 
