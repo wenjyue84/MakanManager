@@ -1,4 +1,7 @@
 import express from 'express';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { query } from '../src/lib/database';
 import { issuesService } from '../src/lib/services/issues.service';
 
 const app = express();
@@ -65,6 +68,144 @@ app.post('/issues/:id/create-task', async (req, res) => {
   } catch (error) {
     console.error('create-task error', error);
     res.status(500).json({ error: 'Failed to create task' });
+  }
+});
+
+// Reports endpoints
+
+// KPI metrics including task completion and budget utilization
+app.get('/reports/metrics', async (req, res) => {
+  try {
+    const { month, year, budget } = req.query as any;
+    const now = new Date();
+    const m = month ? parseInt(month, 10) : now.getMonth() + 1;
+    const y = year ? parseInt(year, 10) : now.getFullYear();
+    const start = new Date(y, m - 1, 1);
+    const end = new Date(y, m, 1);
+    const budgetAmount = budget ? Number(budget) : 10000;
+
+    const taskResult = await query(
+      `SELECT COUNT(*) FILTER (WHERE status = 'done') AS total_done,
+              COUNT(*) FILTER (WHERE status = 'done' AND completed_at <= due_date) AS on_time
+         FROM tasks`
+    );
+    const totalDone = Number(taskResult.rows[0].total_done) || 0;
+    const onTime = Number(taskResult.rows[0].on_time) || 0;
+    const tasksOnTimePercent = totalDone > 0 ? (onTime / totalDone) * 100 : 0;
+
+    const spendResult = await query(
+      `SELECT COALESCE(SUM(total_price),0) AS spending
+         FROM purchases
+        WHERE purchase_date >= $1 AND purchase_date < $2`,
+      [start.toISOString().slice(0, 10), end.toISOString().slice(0, 10)]
+    );
+    const spending = Number(spendResult.rows[0].spending) || 0;
+    const budgetUtilization = budgetAmount > 0 ? (spending / budgetAmount) * 100 : 0;
+
+    res.json({ tasksOnTimePercent, spending, budget: budgetAmount, budgetUtilization });
+  } catch (error: any) {
+    console.error('metrics report error', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// CSV export for top performers
+app.get('/reports/top-performers.csv', async (_req, res) => {
+  try {
+    const result = await query(
+      `SELECT name, points FROM users ORDER BY points DESC LIMIT 10`
+    );
+    const lines = ['Name,Points', ...result.rows.map((r: any) => `${r.name},${r.points}`)];
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="top-performers.csv"');
+    res.send(lines.join('\n'));
+  } catch (error: any) {
+    console.error('top performers report error', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// CSV export for spending
+app.get('/reports/spending.csv', async (req, res) => {
+  try {
+    const { month, year } = req.query as any;
+    const now = new Date();
+    const m = month ? parseInt(month, 10) : now.getMonth() + 1;
+    const y = year ? parseInt(year, 10) : now.getFullYear();
+    const start = new Date(y, m - 1, 1);
+    const end = new Date(y, m, 1);
+
+    const result = await query(
+      `SELECT item_name, category, total_price, purchase_date
+         FROM purchases
+        WHERE purchase_date >= $1 AND purchase_date < $2
+        ORDER BY purchase_date`,
+      [start.toISOString().slice(0, 10), end.toISOString().slice(0, 10)]
+    );
+    const header = 'Item,Category,TotalPrice,PurchaseDate';
+    const rows = result.rows.map(
+      (r: any) => `${r.item_name},${r.category || ''},${r.total_price},${r.purchase_date}`
+    );
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="spending.csv"');
+    res.send([header, ...rows].join('\n'));
+  } catch (error: any) {
+    console.error('spending report error', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Monthly PDF summary
+app.get('/reports/monthly.pdf', async (req, res) => {
+  try {
+    const { month, year, budget } = req.query as any;
+    const now = new Date();
+    const m = month ? parseInt(month, 10) : now.getMonth() + 1;
+    const y = year ? parseInt(year, 10) : now.getFullYear();
+    const start = new Date(y, m - 1, 1);
+    const end = new Date(y, m, 1);
+    const budgetAmount = budget ? Number(budget) : 10000;
+
+    const taskResult = await query(
+      `SELECT COUNT(*) FILTER (WHERE status = 'done') AS total_done,
+              COUNT(*) FILTER (WHERE status = 'done' AND completed_at <= due_date) AS on_time
+         FROM tasks
+        WHERE completed_at >= $1 AND completed_at < $2`,
+      [start.toISOString().slice(0, 10), end.toISOString().slice(0, 10)]
+    );
+    const totalDone = Number(taskResult.rows[0].total_done) || 0;
+    const onTime = Number(taskResult.rows[0].on_time) || 0;
+    const tasksOnTimePercent = totalDone > 0 ? (onTime / totalDone) * 100 : 0;
+
+    const spendResult = await query(
+      `SELECT COALESCE(SUM(total_price),0) AS spending
+         FROM purchases
+        WHERE purchase_date >= $1 AND purchase_date < $2`,
+      [start.toISOString().slice(0, 10), end.toISOString().slice(0, 10)]
+    );
+    const spending = Number(spendResult.rows[0].spending) || 0;
+    const budgetUtilization = budgetAmount > 0 ? (spending / budgetAmount) * 100 : 0;
+
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Monthly Report - ${m}/${y}`, 14, 20);
+    autoTable(doc, {
+      startY: 30,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Tasks On-Time %', `${tasksOnTimePercent.toFixed(2)}%`],
+        ['Spending', spending.toFixed(2)],
+        ['Budget', budgetAmount.toFixed(2)],
+        ['Budget Utilization', `${budgetUtilization.toFixed(2)}%`],
+      ],
+    });
+    const pdfData = doc.output('arraybuffer');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="monthly-report.pdf"');
+    res.send(Buffer.from(pdfData));
+  } catch (error: any) {
+    console.error('monthly report error', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
