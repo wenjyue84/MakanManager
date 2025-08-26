@@ -72,18 +72,13 @@ import {
 import { Alert, AlertDescription } from '../ui/alert';
 import { Separator } from '../ui/separator';
 import { currentUser } from '../../lib/data';
-import { 
-  recipes, 
-  getRecipeById, 
-  scaleRecipe, 
-  getCategoryDisplayName, 
-  getCuisineDisplayName, 
-  getAllergenIcon, 
+import {
+  scaleRecipe,
+  getCategoryDisplayName,
+  getCuisineDisplayName,
+  getAllergenIcon,
   getAllergenDisplayName,
-  createRecipe,
-  updateRecipe,
-  deleteRecipe,
-  type Recipe 
+  type Recipe
 } from '../../lib/recipes-data';
 import { RecipeService } from '../../lib/services/recipes.service';
 import { RecipeBulkActions } from '../recipe-bulk-actions';
@@ -121,6 +116,7 @@ export function Recipes({}: RecipesProps) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [selectedRecipes, setSelectedRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [recipesList, setRecipesList] = useState<Recipe[]>([]);
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -128,13 +124,29 @@ export function Recipes({}: RecipesProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  React.useEffect(() => {
+    const fetchRecipes = async () => {
+      try {
+        setIsLoading(true);
+        const data = await RecipeService.getAllRecipes();
+        setRecipesList(data);
+      } catch (error) {
+        console.error('Error fetching recipes:', error);
+        toast.error('Failed to load recipes');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRecipes();
+  }, [refreshTrigger]);
+
   const isManagement = currentUser.roles.some(role => 
     ['owner', 'manager', 'head-of-kitchen'].includes(role)
   );
 
   // Filter recipes based on search and filters
   const filteredRecipes = useMemo(() => {
-    return recipes.filter(recipe => {
+    return recipesList.filter(recipe => {
       if (searchQuery && !recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
           !recipe.ingredients.some(ing => ing.name.toLowerCase().includes(searchQuery.toLowerCase()))) return false;
       if (selectedCategory !== 'all' && recipe.category !== selectedCategory) return false;
@@ -143,7 +155,7 @@ export function Recipes({}: RecipesProps) {
       if (selectedTags.length > 0 && !selectedTags.some(tag => recipe.tags.includes(tag))) return false;
       return true;
     });
-  }, [searchQuery, selectedCategory, selectedCuisine, selectedStation, selectedTags, refreshTrigger]);
+  }, [recipesList, searchQuery, selectedCategory, selectedCuisine, selectedStation, selectedTags]);
 
   // Get scaled recipe for display
   const scaledRecipe = selectedRecipe ? scaleRecipe(selectedRecipe, scaleFactor[0]) : null;
@@ -262,7 +274,7 @@ export function Recipes({}: RecipesProps) {
       setIsLoading(true);
       const success = await RecipeService.deleteRecipe(id);
       if (success) {
-        const recipeToDelete = getRecipeById(id);
+        const recipeToDelete = recipesList.find(r => r.id === id);
         toast.success(`Recipe "${recipeToDelete?.name || 'Unknown'}" deleted successfully`);
         // Close modals and reset state
         setIsDeleteModalOpen(false);
@@ -293,7 +305,7 @@ export function Recipes({}: RecipesProps) {
     return recipe.photo && recipe.photo !== '';
   };
 
-  const allTags = Array.from(new Set(recipes.flatMap(r => r.tags)));
+  const allTags = Array.from(new Set(recipesList.flatMap(r => r.tags)));
 
   // Recipe Grid Card Component
   const RecipeGridCard = ({ 

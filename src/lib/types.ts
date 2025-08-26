@@ -75,6 +75,22 @@ export interface Recipe {
   station: Station;
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  categories: string[];
+  paymentTerms?: string;
+  deliveryDays?: string[];
+  notes?: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppSettings {
   defaultTaskPoints: number;
   minTaskPoints: number;

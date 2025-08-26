@@ -219,7 +219,8 @@ export function SalaryPage() {
     }
 
     const newAdvance = addSalaryAdvance({
-      staffId: currentUser.id,
+      // Use targetStaffId so management can request advances for selected staff
+      staffId: targetStaffId,
       requestedAmount: advanceForm.amount,
       reason: advanceForm.reason,
       requestDate: new Date().toISOString().split('T')[0],

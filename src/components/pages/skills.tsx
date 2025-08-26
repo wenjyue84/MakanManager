@@ -607,60 +607,67 @@ export function SkillsPage() {
                             return (
                               <TableCell key={skill.id} className="text-center">
                                 {staffSkill ? (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="flex items-center justify-center gap-2 cursor-pointer"
-                                             onClick={() => {
-                                               if (isManagement) {
-                                                 handleEditSkill(staffSkill);
-                                               }
-                                             }}>
-                                          {getLevelDot(staffSkill.level, staffSkill.verified, staffSkill.isExclusive)}
-                                          {staffSkill.verified ? (
-                                            <CheckCircle className="size-3 text-success" />
-                                          ) : staffSkill.requestedVerification ? (
-                                            <Clock className="size-3 text-warning" />
-                                          ) : (
-                                            isManagement && (
-                                              <Button 
-                                                size="sm" 
-                                                variant="ghost" 
-                                                className="h-6 px-2 text-xs"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setSelectedStaffSkill(staffSkill);
-                                                  setIsVerificationOpen(true);
-                                                }}
-                                              >
-                                                Verify
-                                              </Button>
-                                            )
-                                          )}
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <div className="text-center">
-                                          <div className="font-medium flex items-center gap-1">
-                                            {getLevelDisplay(staffSkill.level)}
-                                            {staffSkill.isExclusive && <Crown className="size-3 text-yellow-500" />}
+                                  <div className="flex items-center justify-center gap-1">
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="flex items-center justify-center gap-2">
+                                            {getLevelDot(staffSkill.level, staffSkill.verified, staffSkill.isExclusive)}
+                                            {staffSkill.verified ? (
+                                              <CheckCircle className="size-3 text-success" />
+                                            ) : staffSkill.requestedVerification ? (
+                                              <Clock className="size-3 text-warning" />
+                                            ) : (
+                                              isManagement && (
+                                                <Button
+                                                  size="sm"
+                                                  variant="ghost"
+                                                  className="h-6 px-2 text-xs"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedStaffSkill(staffSkill);
+                                                    setIsVerificationOpen(true);
+                                                  }}
+                                                >
+                                                  Verify
+                                                </Button>
+                                              )
+                                            )}
                                           </div>
-                                          {staffSkill.verified ? (
-                                            <div className="text-xs">
-                                              Verified by {staffMembers.find(s => s.id === staffSkill.verifiedBy)?.name} on {staffSkill.verifiedDate}
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <div className="text-center">
+                                            <div className="font-medium flex items-center gap-1">
+                                              {getLevelDisplay(staffSkill.level)}
+                                              {staffSkill.isExclusive && <Crown className="size-3 text-yellow-500" />}
                                             </div>
-                                          ) : staffSkill.requestedVerification ? (
-                                            <div className="text-xs">Pending verification</div>
-                                          ) : (
-                                            <div className="text-xs">Not verified</div>
-                                          )}
-                                          {staffSkill.notes && (
-                                            <div className="text-xs mt-1 text-muted-foreground">{staffSkill.notes}</div>
-                                          )}
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                                            {staffSkill.verified ? (
+                                              <div className="text-xs">
+                                                Verified by {staffMembers.find(s => s.id === staffSkill.verifiedBy)?.name} on {staffSkill.verifiedDate}
+                                              </div>
+                                            ) : staffSkill.requestedVerification ? (
+                                              <div className="text-xs">Pending verification</div>
+                                            ) : (
+                                              <div className="text-xs">Not verified</div>
+                                            )}
+                                            {staffSkill.notes && (
+                                              <div className="text-xs mt-1 text-muted-foreground">{staffSkill.notes}</div>
+                                            )}
+                                          </div>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    {isManagement && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6"
+                                        onClick={() => handleEditSkill(staffSkill)}
+                                      >
+                                        <Edit className="size-3" />
+                                      </Button>
+                                    )}
+                                  </div>
                                 ) : (
                                   <div className="text-muted-foreground">—</div>
                                 )}

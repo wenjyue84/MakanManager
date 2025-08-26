@@ -106,12 +106,15 @@ export function IssuesPage() {
 
   const isOwner = currentUser.roles.includes('owner');
 
+  // Local issue state for CRUD operations
+  const [issueList, setIssueList] = useState<Issue[]>(issues);
+
   // Get current user's daily budget
   const currentBudget = managementBudgets.get(currentUser.id) || 500;
 
   // Filter issues
   const filteredIssues = useMemo(() => {
-    return issues.filter(issue => {
+    return issueList.filter(issue => {
       if (issue.status !== activeTab) return false;
       if (searchQuery && !issue.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
           !issue.issueNumber.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -119,17 +122,17 @@ export function IssuesPage() {
       if (selectedStation !== 'all' && issue.station !== selectedStation) return false;
       return true;
     });
-  }, [activeTab, searchQuery, selectedCategory, selectedStation]);
+  }, [activeTab, searchQuery, selectedCategory, selectedStation, issueList]);
 
   // Count by status
   const statusCounts = useMemo(() => {
     return {
-      open: issues.filter(i => i.status === 'open').length,
-      investigating: issues.filter(i => i.status === 'investigating').length,
-      resolved: issues.filter(i => i.status === 'resolved').length,
-      dismissed: issues.filter(i => i.status === 'dismissed').length
+      open: issueList.filter(i => i.status === 'open').length,
+      investigating: issueList.filter(i => i.status === 'investigating').length,
+      resolved: issueList.filter(i => i.status === 'resolved').length,
+      dismissed: issueList.filter(i => i.status === 'dismissed').length
     };
-  }, []);
+  }, [issueList]);
 
   const getUserById = (id: string) => {
     return staffMembers.find(member => member.id === id);
@@ -158,6 +161,29 @@ export function IssuesPage() {
       toast.error('Please fill in all required fields');
       return;
     }
+    const nextNumber =
+      Math.max(0, ...issueList.map(i => parseInt(i.issueNumber.split('-')[1] || '0'))) + 1;
+    const newIssue: Issue = {
+      id: Date.now().toString(),
+      issueNumber: `ISS-${nextNumber}`,
+      title: formData.title,
+      category: formData.category,
+      station: formData.station,
+      description: formData.description,
+      reportedBy: currentUser.id,
+      targetStaff: formData.targetStaff || undefined,
+      status: 'open',
+      defaultPoints: formData.defaultPoints,
+      managerExtra: 0,
+      ownerExtra: 0,
+      totalPoints: formData.defaultPoints,
+      photo: formData.photo,
+      attachments: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setIssueList(prev => [...prev, newIssue]);
 
     toast.success('Issue created successfully');
     setIsCreateOpen(false);
@@ -173,17 +199,49 @@ export function IssuesPage() {
       return;
     }
 
-    const totalPoints = selectedIssue.defaultPoints + approvalData.managerExtra + approvalData.ownerExtra;
-    
-    toast.success(`Issue ${approvalData.newStatus}. ${Math.abs(totalPoints)} points applied.`);
+    const totalPoints =
+      selectedIssue.defaultPoints + approvalData.managerExtra + approvalData.ownerExtra;
+
+    const updatedIssue: Issue = {
+      ...selectedIssue,
+      managerExtra: approvalData.managerExtra,
+      ownerExtra: approvalData.ownerExtra,
+      totalPoints,
+      status: approvalData.newStatus,
+      appliedBy: currentUser.id,
+      appliedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setIssueList(prev => prev.map(i => (i.id === selectedIssue.id ? updatedIssue : i)));
+    setSelectedIssue(updatedIssue);
+
+    toast.success(
+      `Issue ${approvalData.newStatus}. ${Math.abs(totalPoints)} points applied.`,
+    );
     setIsApprovalOpen(false);
     setIsDetailOpen(false);
   };
 
   const handleStatusChange = (status: Issue['status']) => {
     if (!selectedIssue) return;
-    
+    const updatedIssue: Issue = {
+      ...selectedIssue,
+      status,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setIssueList(prev => prev.map(i => (i.id === selectedIssue.id ? updatedIssue : i)));
+    setSelectedIssue(updatedIssue);
+
     toast.success(`Issue status changed to ${status}`);
+  };
+
+  const handleDeleteIssue = () => {
+    if (!selectedIssue) return;
+    setIssueList(prev => prev.filter(i => i.id !== selectedIssue.id));
+    toast.success('Issue deleted');
+    setIsDetailOpen(false);
   };
 
   const handleCreateFollowupTask = () => {
@@ -803,6 +861,11 @@ export function IssuesPage() {
               </div>
 
               <DialogFooter>
+                {isManagement && (
+                  <Button variant="destructive" onClick={handleDeleteIssue}>
+                    Delete
+                  </Button>
+                )}
                 <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
                   Close
                 </Button>
