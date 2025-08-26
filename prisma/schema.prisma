@@ -24,7 +24,7 @@
   tasks     Task[]   @relation("StaffTasks", references: [id])
  }
 
- model Task {
+model Task {
   id          String   @id @default(uuid())
   title       String
   description String?
@@ -37,4 +37,13 @@
   updatedAt   DateTime @updatedAt
   assigner    Staff?   @relation("StaffTasks", fields: [assignerId], references: [id])
   assignee    Staff?   @relation("StaffTasks", fields: [assigneeId], references: [id])
- }
+}
+
+model Reminder {
+  id        String   @id @default(uuid())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String
+  remindAt  DateTime
+  message   String?
+  createdAt DateTime @default(now())
+}

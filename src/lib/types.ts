@@ -82,6 +82,14 @@ export interface TaskHistory {
   createdAt: string;
 }
 
+export interface Reminder {
+  id: string;
+  taskId: string;
+  remindAt: string;
+  message?: string;
+  createdAt: string;
+}
+
 export interface ReportMetrics {
   tasksOnTimePercent: number;
   spending: number;
