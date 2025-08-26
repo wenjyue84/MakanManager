@@ -284,8 +284,8 @@ export function EnhancedAppLayout({
               <span className="text-primary-foreground text-sm font-bold">MM</span>
             </div>
             <div>
-              <h1 className="text-lg font-semibold">Makan Moments</h1>
-              <p className="text-xs text-muted-foreground">Staff Points & Tasks</p>
+              <h1 className="text-lg font-semibold">{t('brandName')}</h1>
+              <p className="text-xs text-muted-foreground">{t('brandTagline')}</p>
             </div>
           </div>
           
@@ -433,8 +433,8 @@ export function EnhancedAppLayout({
               <span className="text-primary-foreground font-bold">MM</span>
             </div>
             <div>
-              <h1 className="font-semibold">Makan Moments</h1>
-              <p className="text-sm text-muted-foreground">Staff Points & Tasks</p>
+              <h1 className="font-semibold">{t('brandName')}</h1>
+              <p className="text-sm text-muted-foreground">{t('brandTagline')}</p>
             </div>
           </div>
         </div>
