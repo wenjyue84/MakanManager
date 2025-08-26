@@ -23,6 +23,7 @@ import { OnlineOrdersPage } from "./components/pages/online-orders";
 import { CashPage } from "./components/pages/cash";
 import { ReportsPage } from "./components/pages/reports";
 import { TaskDetailModal } from "./components/modals/task-detail-modal";
+import { TaskCreateModal } from "./components/modals/task-create-modal";
 import { TaskManagementDemo } from "./components/pages/task-management-demo";
 import { Task } from "./lib/types";
 import {
@@ -36,6 +37,7 @@ function AppContent() {
   const [tasks, setTasks] = useState(initialTasks);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -78,7 +80,20 @@ function AppContent() {
   };
 
   const handleCreateTask = () => {
-    toast.info("Create Task feature coming soon!");
+    setIsCreateTaskModalOpen(true);
+  };
+
+  const handleTaskCreate = (
+    taskData: Omit<Task, "id" | "createdAt" | "overdueDays">
+  ) => {
+    const newTask: Task = {
+      ...taskData,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      overdueDays: 0,
+    };
+    setTasks((prev) => [newTask, ...prev]);
+    toast.success("Task created successfully!");
   };
 
   const handleCreateDiscipline = () => {
@@ -186,6 +201,49 @@ function AppContent() {
                 }}
                 onUpdate={handleTaskUpdate}
               />
+            } />
+            <Route path="/tasks" element={
+              <Tasks
+                tasks={tasks}
+                onTaskClick={handleTaskClick}
+                onCreateTask={handleCreateTask}
+                onCreateDiscipline={handleCreateDiscipline}
+              />
+            } />
+            <Route path="/task-management" element={<TaskManagementDemo />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/staff" element={<Staff onProfileClick={handleProfileClick} />} />
+            <Route path="/recipes" element={<Recipes />} />
+            <Route path="/staff-meal" element={<StaffMealPage />} />
+            <Route path="/disposal" element={<DisposalPage />} />
+            <Route path="/issues" element={<IssuesPage />} />
+            <Route path="/purchase-list" element={<PurchaseListPage />} />
+            <Route path="/skills" element={<SkillsPage />} />
+            <Route path="/suppliers" element={<SuppliersPage />} />
+            <Route path="/salary" element={<SalaryPage />} />
+            <Route path="/online-orders" element={<OnlineOrdersPage />} />
+            <Route path="/cash" element={<CashPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </EnhancedAppLayout>
+
+        <TaskCreateModal
+          isOpen={isCreateTaskModalOpen}
+          onClose={() => setIsCreateTaskModalOpen(false)}
+          onCreateTask={handleTaskCreate}
+        />
+
+        <TaskDetailModal
+          task={selectedTask}
+          isOpen={isTaskModalOpen}
+          onClose={() => {
+            setIsTaskModalOpen(false);
+            setSelectedTask(null);
+          }}
+          onUpdate={handleTaskUpdate}
+        />
+
 
               <Toaster />
             </ProtectedRoute>
