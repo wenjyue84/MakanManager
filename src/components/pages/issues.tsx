@@ -55,12 +55,11 @@ import { Separator } from '../ui/separator';
 import { currentUser } from '../../lib/data';
 import { staffMembers } from '../../lib/staff-data';
 import { managementBudgets } from '../../lib/data';
-import { 
-  issues,
+import {
   getCategoryDefaultPoints,
   getStatusColor,
   formatDateTime,
-  type Issue 
+  type Issue
 } from '../../lib/operations-data';
 import { Station } from '../../lib/types';
 import { toast } from 'sonner';
@@ -107,7 +106,23 @@ export function IssuesPage() {
   const isOwner = currentUser.roles.includes('owner');
 
   // Local issue state for CRUD operations
-  const [issueList, setIssueList] = useState<Issue[]>(issues);
+  const [issueList, setIssueList] = useState<Issue[]>([]);
+
+  // Load issues from server
+  React.useEffect(() => {
+    const loadIssues = async () => {
+      try {
+        const res = await fetch('/issues');
+        if (res.ok) {
+          const data = await res.json();
+          setIssueList(data);
+        }
+      } catch (err) {
+        console.error('Failed to load issues', err);
+      }
+    };
+    loadIssues();
+  }, []);
 
   // Get current user's daily budget
   const currentBudget = managementBudgets.get(currentUser.id) || 500;
@@ -156,15 +171,14 @@ export function IssuesPage() {
     setFormData(prev => ({ ...prev, category, defaultPoints }));
   };
 
-  const handleSaveIssue = () => {
+  const handleSaveIssue = async () => {
     if (!formData.title || !formData.description) {
       toast.error('Please fill in all required fields');
       return;
     }
     const nextNumber =
       Math.max(0, ...issueList.map(i => parseInt(i.issueNumber.split('-')[1] || '0'))) + 1;
-    const newIssue: Issue = {
-      id: Date.now().toString(),
+    const payload = {
       issueNumber: `ISS-${nextNumber}`,
       title: formData.title,
       category: formData.category,
@@ -172,55 +186,66 @@ export function IssuesPage() {
       description: formData.description,
       reportedBy: currentUser.id,
       targetStaff: formData.targetStaff || undefined,
-      status: 'open',
-      defaultPoints: formData.defaultPoints,
-      managerExtra: 0,
-      ownerExtra: 0,
-      totalPoints: formData.defaultPoints,
       photo: formData.photo,
-      attachments: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
 
-    setIssueList(prev => [...prev, newIssue]);
-
-    toast.success('Issue created successfully');
-    setIsCreateOpen(false);
+    try {
+      const res = await fetch('/issues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setIssueList(prev => [...prev, created]);
+        toast.success('Issue created successfully');
+        setIsCreateOpen(false);
+      } else {
+        toast.error('Failed to create issue');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to create issue');
+    }
   };
 
-  const handleApproveIssue = () => {
+  const handleApproveIssue = async () => {
     if (!selectedIssue) return;
 
     const totalExtra = Math.abs(approvalData.managerExtra) + Math.abs(approvalData.ownerExtra);
-    
+
     if (totalExtra > currentBudget) {
       toast.error(`Insufficient budget. You have RM${currentBudget} remaining today.`);
       return;
     }
 
-    const totalPoints =
-      selectedIssue.defaultPoints + approvalData.managerExtra + approvalData.ownerExtra;
-
-    const updatedIssue: Issue = {
-      ...selectedIssue,
-      managerExtra: approvalData.managerExtra,
-      ownerExtra: approvalData.ownerExtra,
-      totalPoints,
-      status: approvalData.newStatus,
-      appliedBy: currentUser.id,
-      appliedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setIssueList(prev => prev.map(i => (i.id === selectedIssue.id ? updatedIssue : i)));
-    setSelectedIssue(updatedIssue);
-
-    toast.success(
-      `Issue ${approvalData.newStatus}. ${Math.abs(totalPoints)} points applied.`,
-    );
-    setIsApprovalOpen(false);
-    setIsDetailOpen(false);
+    try {
+      const res = await fetch(`/issues/${selectedIssue.id}/apply-points`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          managerExtra: approvalData.managerExtra,
+          ownerExtra: approvalData.ownerExtra,
+          newStatus: approvalData.newStatus,
+          appliedBy: currentUser.id,
+        }),
+      });
+      if (res.ok) {
+        const updatedIssue: Issue = await res.json();
+        setIssueList(prev => prev.map(i => (i.id === updatedIssue.id ? updatedIssue : i)));
+        setSelectedIssue(updatedIssue);
+        toast.success(
+          `Issue ${approvalData.newStatus}. ${Math.abs(updatedIssue.totalPoints)} points applied.`,
+        );
+        setIsApprovalOpen(false);
+        setIsDetailOpen(false);
+      } else {
+        toast.error('Failed to apply points');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to apply points');
+    }
   };
 
   const handleStatusChange = (status: Issue['status']) => {
@@ -244,8 +269,19 @@ export function IssuesPage() {
     setIsDetailOpen(false);
   };
 
-  const handleCreateFollowupTask = () => {
-    toast.info('Redirecting to create task with prefilled details...');
+  const handleCreateFollowupTask = async () => {
+    if (!selectedIssue) return;
+    try {
+      await fetch(`/issues/${selectedIssue.id}/create-task`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignerId: currentUser.id }),
+      });
+      toast.success('Follow-up task created');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to create task');
+    }
   };
 
   const handlePhotoUpload = () => {
