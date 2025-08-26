@@ -54,7 +54,8 @@ import { Label } from '../ui/label';
 import { Separator } from '../ui/separator';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Task, Station, TaskStatus, User as UserType } from '../../lib/types';
-import { users, currentUser } from '../../lib/data';
+import { users } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 
 interface TasksProps {
   tasks: Task[];
@@ -103,6 +104,7 @@ export function Tasks({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+
   if (loading) {
     return <div className="p-4">Loading tasks...</div>;
   }
@@ -112,6 +114,7 @@ export function Tasks({
   }
 
   const isManagement = currentUser.roles.some(role => 
+
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 

@@ -204,6 +204,12 @@ function AppContent() {
                 </Routes>
               </EnhancedAppLayout>
 
+              <TaskCreateModal
+                isOpen={isCreateTaskModalOpen}
+                onClose={() => setIsCreateTaskModalOpen(false)}
+                onCreateTask={handleTaskCreate}
+              />
+
               <TaskDetailModal
                 task={selectedTask}
                 isOpen={isTaskModalOpen}
@@ -213,6 +219,7 @@ function AppContent() {
                 }}
                 onUpdate={handleTaskUpdate}
               />
+
             } />
             <Route path="/tasks" element={
               <Tasks
@@ -259,6 +266,7 @@ function AppContent() {
           }}
           onUpdate={handleTaskUpdate}
         />
+
 
 
               <Toaster />

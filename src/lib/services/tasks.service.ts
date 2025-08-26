@@ -1,5 +1,5 @@
-import { query } from '../database';
 import { Task, TaskStatus, Station } from '../types';
+
 
 export class TasksService {
   async getAllTasks(): Promise<Task[]> {
@@ -236,12 +236,16 @@ export class TasksService {
     `, values);
 
     return result.rows.length > 0 ? this.mapRowToTask(result.rows[0]) : null;
+
   }
 
-  async deleteTask(id: string): Promise<boolean> {
-    const result = await query('DELETE FROM tasks WHERE id = $1', [id]);
-    return result.rowCount > 0;
+  updateTask(id: string, task: Partial<Task>): Promise<Task> {
+    return this.request<Task>(`/api/tasks/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(task),
+    });
   }
+
 
   async getTasksByStatus(status: TaskStatus): Promise<Task[]> {
     const result = await query(`
@@ -371,7 +375,9 @@ export class TasksService {
       completedAt: row.completedAt,
       approvedAt: row.approvedAt
     };
+
   }
 }
 
 export const tasksService = new TasksService();
+export default TasksService;

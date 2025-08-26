@@ -23,7 +23,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Checkbox } from '../ui/checkbox';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Task, User as UserType, Station } from '../../lib/types';
-import { users, currentUser } from '../../lib/data';
+import { users } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 
 interface EnhancedBulkAssignmentProps {
   isOpen: boolean;
@@ -52,27 +53,33 @@ export function EnhancedBulkAssignment({
   const [assignmentMode, setAssignmentMode] = useState<'manual' | 'smart' | 'balanced'>('smart');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 
+  const { user: currentUser, isLoading } = useCurrentUser();
+
+  if (isLoading || !currentUser) {
+    return null;
+  }
+
   // Calculate user workloads
   const userWorkloads = useMemo(() => {
     const workloads: UserWorkload[] = [];
-    
+
     users.forEach(user => {
       if (user.id === currentUser.id) return; // Skip current user
-      
+
       // Mock workload data - in real app this would come from the service
       const assignedTasks = Math.floor(Math.random() * 10) + 1;
       const totalPoints = Math.floor(Math.random() * 300) + 50;
       const averageCompletionRate = Math.floor(Math.random() * 40) + 60; // 60-100%
-      
+
       // Check station compatibility with selected tasks
       const taskStations = [...new Set(selectedTasks.map(task => task.station))];
       const stationMatch = !user.station || taskStations.includes(user.station);
-      
+
       // Determine current load
       let currentLoad: 'low' | 'medium' | 'high' = 'low';
       if (assignedTasks > 7) currentLoad = 'high';
       else if (assignedTasks > 4) currentLoad = 'medium';
-      
+
       workloads.push({
         userId: user.id,
         assignedTasks,
@@ -83,7 +90,7 @@ export function EnhancedBulkAssignment({
         estimatedCapacity: Math.max(0, 10 - assignedTasks)
       });
     });
-    
+
     return workloads.sort((a, b) => {
       // Sort by: station match first, then by load (low to high), then by completion rate (high to low)
       if (a.stationMatch !== b.stationMatch) return b.stationMatch ? 1 : -1;
@@ -93,7 +100,7 @@ export function EnhancedBulkAssignment({
       }
       return b.averageCompletionRate - a.averageCompletionRate;
     });
-  }, [selectedTasks]);
+  }, [selectedTasks, currentUser.id]);
 
   const getUserById = (id: string) => users.find(user => user.id === id);
   const getWorkloadByUserId = (id: string) => userWorkloads.find(w => w.userId === id);

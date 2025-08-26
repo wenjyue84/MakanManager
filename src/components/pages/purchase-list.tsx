@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, ShoppingCart } from 'lucide-react';
 import { Button } from '../ui/button';
-import { currentUser } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import { PurchaseStats } from './purchase-list/purchase-stats';
 import { PurchaseFilters } from './purchase-list/purchase-filters';
 import { PurchaseItemCard } from './purchase-list/purchase-item-card';
@@ -56,7 +56,13 @@ export function PurchaseListPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isManagement = currentUser.roles.some(role => 
+  const { user: currentUser, isLoading } = useCurrentUser();
+
+  if (isLoading || !currentUser) {
+    return <div>Loading...</div>;
+  }
+
+  const isManagement = currentUser.roles.some(role =>
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 

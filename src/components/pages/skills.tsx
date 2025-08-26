@@ -64,7 +64,8 @@ import {
 import { Progress } from '../ui/progress';
 import { Separator } from '../ui/separator';
 import { Switch } from '../ui/switch';
-import { currentUser, managementBudgets } from '../../lib/data';
+import { managementBudgets } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import { staffMembers } from '../../lib/staff-data';
 import { 
   skills,
@@ -118,7 +119,13 @@ export function SkillsPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isManagement = currentUser.roles.some(role => 
+  const { user: currentUser, isLoading } = useCurrentUser();
+
+  if (isLoading || !currentUser) {
+    return <div>Loading...</div>;
+  }
+
+  const isManagement = currentUser.roles.some(role =>
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 
