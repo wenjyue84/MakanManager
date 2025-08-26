@@ -13,14 +13,29 @@ export interface User {
   password: string; // In production, this should be hashed
   roles: UserRole[];
   avatar?: string;
+  gender: 'male' | 'female';
   phone: string;
   startDate: string;
-  emergencyContact: string;
+  emergencyContact: {
+    name: string;
+    phone: string;
+  };
+  status: 'active' | 'inactive';
   photo: string;
   station?: Station;
+  documents: UserDocument[];
   points: number;
   weeklyPoints: number;
   monthlyPoints: number;
+}
+
+export interface UserDocument {
+  id: string;
+  name: string;
+  type: 'passport' | 'ic' | 'contract' | 'certificate';
+  filename: string;
+  uploadedBy: string;
+  uploadedDate: string;
 }
 
 export interface Task {

@@ -9,9 +9,9 @@ export class AuthService {
 
       // Find user by email and password
       const user = users.find(
-        u => u.email.toLowerCase() === credentials.email.toLowerCase() && 
+        (u: any) => u.email.toLowerCase() === credentials.email.toLowerCase() &&
              u.password === credentials.password
-      );
+      ) as User | undefined;
 
       if (user) {
         return { success: true, user };
