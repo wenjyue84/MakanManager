@@ -11,17 +11,48 @@
  }
 
  model Staff {
+  id          String      @id @default(uuid())
+  name        String
+  roles       String      // comma separated roles
+  gender      String?
+  phone       String
+  email       String
+  startDate   DateTime?
+  dateOfBirth DateTime?
+  address     String?
+  points      Int         @default(0)
+  status      String?     @default("active")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  tasks       Task[]      @relation("StaffTasks", references: [id])
+  documents   Document[]
+  skills      UserSkill[]
+ }
+
+ model Document {
   id        String   @id @default(uuid())
-  name      String
-  roles     String   // comma separated roles
-  gender    String?
-  phone     String
-  email     String?
-  startDate DateTime?
-  status    String? @default("active")
+  staff     Staff    @relation(fields: [staffId], references: [id])
+  staffId   String
+  fileName  String
+  url       String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  tasks     Task[]   @relation("StaffTasks", references: [id])
+ }
+
+ model Skill {
+  id    String      @id @default(uuid())
+  name  String      @unique
+  users UserSkill[]
+ }
+
+ model UserSkill {
+  id            String   @id @default(uuid())
+  staff         Staff    @relation(fields: [staffId], references: [id])
+  staffId       String
+  skill         Skill    @relation(fields: [skillId], references: [id])
+  skillId       String
+  verified      Boolean  @default(false)
+  pointsAwarded Boolean  @default(false)
+  createdAt     DateTime @default(now())
  }
 
 model Task {

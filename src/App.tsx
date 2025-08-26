@@ -22,6 +22,7 @@ import { SalaryPage } from "./components/pages/salary";
 import { OnlineOrdersPage } from "./components/pages/online-orders";
 import { CashPage } from "./components/pages/cash";
 import { ReportsPage } from "./components/pages/reports";
+import { ProfilePage } from "./components/pages/profile-page";
 import { TaskDetailModal } from "./components/modals/task-detail-modal";
 import { TaskCreateModal } from "./components/modals/task-create-modal";
 import { TaskManagementDemo } from "./components/pages/task-management-demo";
@@ -200,6 +201,7 @@ function AppContent() {
                   <Route path="/online-orders" element={<OnlineOrdersPage />} />
                   <Route path="/cash" element={<CashPage />} />
                   <Route path="/reports" element={<ReportsPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               </EnhancedAppLayout>
