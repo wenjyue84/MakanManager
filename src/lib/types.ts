@@ -47,6 +47,13 @@ export interface Task {
   rejectionReason?: string;
 }
 
+export interface ReportMetrics {
+  tasksOnTimePercent: number;
+  spending: number;
+  budget: number;
+  budgetUtilization: number;
+}
+
 export interface DisciplinaryAction {
   id: string;
   targetUserId: string;
