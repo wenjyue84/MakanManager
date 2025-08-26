@@ -1,7 +1,6 @@
 import { Station } from "./types";
 
 // Import sample data from separate files
-export { staffMeals, type StaffMeal } from "./staff-meals-data";
 export { disposals, type Disposal } from "./disposals-data";
 
 // Issues Data

@@ -18,7 +18,9 @@ import { Checkbox } from '../ui/checkbox';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Badge } from '../ui/badge';
 import { Recipe, RecipeIngredient, RecipeStep, RecipeAttachment, Station } from '../../lib/recipes-data';
-import { currentUser } from '../../lib/data';
+
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
+
 import { toast } from "sonner@2.0.3";
 
 interface RecipeCreateModalProps {
@@ -28,6 +30,7 @@ interface RecipeCreateModalProps {
 }
 
 export function RecipeCreateModal({ isOpen, onClose, onCreateRecipe }: RecipeCreateModalProps) {
+  useCurrentUser();
   const [formData, setFormData] = useState({
     name: '',
     category: 'main-dish' as 'main-dish' | 'soup' | 'beverage' | 'sauce-condiment',

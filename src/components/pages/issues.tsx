@@ -52,7 +52,7 @@ import {
   DialogTitle
 } from '../ui/dialog';
 import { Separator } from '../ui/separator';
-import { currentUser } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import { staffMembers } from '../../lib/staff-data';
 import { managementBudgets } from '../../lib/data';
 import {
@@ -74,6 +74,8 @@ export function IssuesPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isApprovalOpen, setIsApprovalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  const { user: currentUser, isLoading } = useCurrentUser();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -99,7 +101,11 @@ export function IssuesPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isManagement = currentUser.roles.some(role => 
+  if (isLoading || !currentUser) {
+    return <div>Loading...</div>;
+  }
+
+  const isManagement = currentUser.roles.some(role =>
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 
@@ -214,6 +220,7 @@ export function IssuesPage() {
 
     const totalExtra = Math.abs(approvalData.managerExtra) + Math.abs(approvalData.ownerExtra);
 
+
     if (totalExtra > currentBudget) {
       toast.error(`Insufficient budget. You have RM${currentBudget} remaining today.`);
       return;
@@ -246,6 +253,7 @@ export function IssuesPage() {
       console.error(err);
       toast.error('Failed to apply points');
     }
+
   };
 
   const handleStatusChange = (status: Issue['status']) => {

@@ -88,6 +88,13 @@ ALTER TABLE disciplinary_actions
   ADD CONSTRAINT chk_disciplinary_points_reasonable CHECK (points >= -1000 AND points <= 1000),
   ADD CONSTRAINT chk_disciplinary_self_action CHECK (target_user_id != created_by_id);
 
+-- ==================== POINT ENTRIES CONSTRAINTS ====================
+
+ALTER TABLE point_entries
+  ADD CONSTRAINT chk_point_entries_source_not_empty CHECK (TRIM(source_type) != ''),
+  ADD CONSTRAINT chk_point_entries_points_reasonable CHECK (points >= -1000 AND points <= 1000),
+  ADD CONSTRAINT chk_point_entries_manager_target_diff CHECK (manager_id <> target_user_id);
+
 -- ==================== RECIPES TABLE CONSTRAINTS ====================
 
 ALTER TABLE recipes

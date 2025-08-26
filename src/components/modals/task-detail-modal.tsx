@@ -27,7 +27,8 @@ import { Progress } from '../ui/progress';
 import { Separator } from '../ui/separator';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Task } from '../../lib/types';
-import { users, currentUser, managementBudgets, appSettings } from '../../lib/data';
+import { users, managementBudgets, appSettings } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 
 interface TaskDetailModalProps {
   task: Task | null;
@@ -43,22 +44,23 @@ export function TaskDetailModal({ task, isOpen, onClose, onTaskUpdate }: TaskDet
   const [showApproval, setShowApproval] = useState(false);
   const [showRejection, setShowRejection] = useState(false);
   const [proofText, setProofText] = useState('');
+  const { user: currentUser, isLoading } = useCurrentUser();
 
-  if (!task) return null;
+  if (!task || isLoading || !currentUser) return null;
 
   const assignee = task.assigneeId ? users.find(u => u.id === task.assigneeId) : null;
   const assigner = users.find(u => u.id === task.assignerId);
-  
+
   const isAssignee = task.assigneeId === currentUser.id;
-  const canApprove = task.status === 'pending-review' && 
-    (task.assignerId === currentUser.id || 
+  const canApprove = task.status === 'pending-review' &&
+    (task.assignerId === currentUser.id ||
      currentUser.roles.some(role => ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)));
-  
+
   const isOwner = currentUser.roles.includes('owner');
   const canClaim = task.status === 'open' && 
     (isOwner ? assigner?.roles.includes('owner') : true);
 
-  // Budget calculation
+  // Budget calculation with daily budget tracking
   const currentBudget = managementBudgets.get(currentUser.id) || appSettings.managementDailyBudget;
   const calculatedPoints = Math.round(task.basePoints * multiplier[0] + adjustment);
   const budgetCost = Math.abs(adjustment);
