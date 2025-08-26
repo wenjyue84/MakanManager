@@ -21,7 +21,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "DANGEROUSLY_DISABLE_HOST_CHECK=true npx vite --host 0.0.0.0 --port 5000"
+args = "npx vite --config vite.config.override.mjs"
 waitForPort = 5000
 
 [[ports]]
