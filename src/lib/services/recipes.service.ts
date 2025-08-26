@@ -5,7 +5,8 @@ import {
   RecipeIngredient,
   RecipeStep,
   RecipeAttachment
-} from '../recipes-data';
+} from '../types';
+import { jsPDF } from 'jspdf';
 
 export interface CreateRecipeData {
   name: string;
@@ -268,6 +269,40 @@ export class RecipeService {
     });
 
     return stats;
+  }
+
+  /**
+   * Generate printable PDF for a recipe
+   */
+  static async printRecipe(id: string): Promise<Uint8Array | null> {
+    const recipe = await this.getRecipeById(id);
+    if (!recipe) return null;
+
+    const doc = new jsPDF({ format: 'a4' });
+    doc.setFontSize(18);
+    doc.text(recipe.name, 20, 30);
+
+    let y = 50;
+    doc.setFontSize(12);
+    doc.text(`Yield: ${recipe.yield}`, 20, y);
+    y += 20;
+
+    doc.text('Ingredients:', 20, y);
+    y += 20;
+    recipe.ingredients.forEach(ing => {
+      doc.text(`- ${ing.quantity} ${ing.unit} ${ing.name}`, 30, y);
+      y += 15;
+    });
+
+    y += 10;
+    doc.text('Steps:', 20, y);
+    y += 20;
+    recipe.steps.forEach(step => {
+      doc.text(`${step.step}. ${step.instruction}`, 30, y);
+      y += 15;
+    });
+
+    return doc.output('arraybuffer');
   }
 }
 

@@ -72,6 +72,9 @@ export function RecipeCreateModal({ isOpen, onClose, onCreateRecipe }: RecipeCre
     if (formData.steps.length === 0) {
       newErrors.steps = 'At least one step is required';
     }
+    if (!formData.photo.trim()) {
+      newErrors.photo = 'Photo is required';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -301,13 +304,15 @@ export function RecipeCreateModal({ isOpen, onClose, onCreateRecipe }: RecipeCre
 
           {/* Photo URL */}
           <div className="space-y-2">
-            <Label htmlFor="photo">Photo URL (optional)</Label>
+            <Label htmlFor="photo">Photo URL</Label>
             <Input
               id="photo"
               value={formData.photo}
               onChange={(e) => setFormData(prev => ({ ...prev, photo: e.target.value }))}
               placeholder="https://example.com/photo.jpg"
+              className={errors.photo ? 'border-red-500' : ''}
             />
+            {errors.photo && <p className="text-sm text-red-500">{errors.photo}</p>}
           </div>
 
           {/* Tags */}
