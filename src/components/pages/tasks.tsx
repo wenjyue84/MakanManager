@@ -59,6 +59,8 @@ import { useCurrentUser } from '../../lib/hooks/use-current-user';
 
 interface TasksProps {
   tasks: Task[];
+  loading: boolean;
+  error: string | null;
   onTaskClick: (task: Task) => void;
   onTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   onCreateTask: () => void;
@@ -77,13 +79,15 @@ const statusCounts = {
 
 const stations: Station[] = ['kitchen', 'front', 'store', 'outdoor'];
 
-export function Tasks({ 
-  tasks, 
-  onTaskClick, 
-  onTaskUpdate, 
-  onCreateTask, 
+export function Tasks({
+  tasks,
+  loading,
+  error,
+  onTaskClick,
+  onTaskUpdate,
+  onCreateTask,
   onCreateDiscipline,
-  currentLanguage 
+  currentLanguage
 }: TasksProps) {
   const [activeTab, setActiveTab] = useState<TaskStatus>('open');
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,13 +104,17 @@ export function Tasks({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const { user: currentUser, isLoading } = useCurrentUser();
 
-  if (isLoading || !currentUser) {
-    return <div>Loading...</div>;
+  if (loading) {
+    return <div className="p-4">Loading tasks...</div>;
   }
 
-  const isManagement = currentUser.roles.some(role =>
+  if (error) {
+    return <div className="p-4 text-red-500">{error}</div>;
+  }
+
+  const isManagement = currentUser.roles.some(role => 
+
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 

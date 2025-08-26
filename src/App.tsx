@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import OrderFormPage from "./components/pages/order-form";
 import { AuthProvider } from "./lib/contexts/auth-context";
@@ -26,18 +26,33 @@ import { TaskDetailModal } from "./components/modals/task-detail-modal";
 import { TaskCreateModal } from "./components/modals/task-create-modal";
 import { TaskManagementDemo } from "./components/pages/task-management-demo";
 import { Task } from "./lib/types";
-import {
-  tasks as initialTasks,
-  users,
-} from "./lib/data";
+import { users } from "./lib/data";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 
 function AppContent() {
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await fetch('/api/tasks');
+        if (!res.ok) throw new Error('Failed to load tasks');
+        const data = await res.json();
+        setTasks(data);
+      } catch (err:any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchTasks();
+  }, []);
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -86,14 +101,7 @@ function AppContent() {
   const handleTaskCreate = (
     taskData: Omit<Task, "id" | "createdAt" | "overdueDays">
   ) => {
-    const newTask: Task = {
-      ...taskData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      overdueDays: 0,
-    };
-    setTasks((prev) => [newTask, ...prev]);
-    toast.success("Task created successfully!");
+    toast.info("Task creation via API not implemented in demo");
   };
 
   const handleCreateDiscipline = () => {
@@ -168,9 +176,13 @@ function AppContent() {
                     element={
                       <Tasks
                         tasks={tasks}
+                        loading={isLoading}
+                        error={error}
                         onTaskClick={handleTaskClick}
+                        onTaskUpdate={handleTaskUpdate}
                         onCreateTask={handleCreateTask}
                         onCreateDiscipline={handleCreateDiscipline}
+                        currentLanguage="en"
                       />
                     }
                   />
@@ -207,6 +219,55 @@ function AppContent() {
                 }}
                 onUpdate={handleTaskUpdate}
               />
+
+            } />
+            <Route path="/tasks" element={
+              <Tasks
+                tasks={tasks}
+                loading={isLoading}
+                error={error}
+                onTaskClick={handleTaskClick}
+                onTaskUpdate={handleTaskUpdate}
+                onCreateTask={handleCreateTask}
+                onCreateDiscipline={handleCreateDiscipline}
+                currentLanguage="en"
+              />
+            } />
+            <Route path="/task-management" element={<TaskManagementDemo />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/staff" element={<Staff onProfileClick={handleProfileClick} />} />
+            <Route path="/recipes" element={<Recipes />} />
+            <Route path="/staff-meal" element={<StaffMealPage />} />
+            <Route path="/disposal" element={<DisposalPage />} />
+            <Route path="/issues" element={<IssuesPage />} />
+            <Route path="/purchase-list" element={<PurchaseListPage />} />
+            <Route path="/skills" element={<SkillsPage />} />
+            <Route path="/suppliers" element={<SuppliersPage />} />
+            <Route path="/salary" element={<SalaryPage />} />
+            <Route path="/online-orders" element={<OnlineOrdersPage />} />
+            <Route path="/cash" element={<CashPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </EnhancedAppLayout>
+
+        <TaskCreateModal
+          isOpen={isCreateTaskModalOpen}
+          onClose={() => setIsCreateTaskModalOpen(false)}
+          onCreateTask={handleTaskCreate}
+        />
+
+        <TaskDetailModal
+          task={selectedTask}
+          isOpen={isTaskModalOpen}
+          onClose={() => {
+            setIsTaskModalOpen(false);
+            setSelectedTask(null);
+          }}
+          onUpdate={handleTaskUpdate}
+        />
+
+
 
               <Toaster />
             </ProtectedRoute>

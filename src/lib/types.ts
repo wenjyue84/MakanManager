@@ -45,6 +45,26 @@ export interface Task {
   completedAt?: string;
   approvedAt?: string;
   rejectionReason?: string;
+  tags?: string[];
+  attachments?: string[];
+  comments?: TaskComment[];
+  history?: TaskHistory[];
+}
+
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  userId: string;
+  comment: string;
+  createdAt: string;
+}
+
+export interface TaskHistory {
+  id: string;
+  taskId: string;
+  action: string;
+  userId?: string;
+  createdAt: string;
 }
 
 export interface ReportMetrics {
