@@ -231,27 +231,41 @@ CREATE TABLE notifications (
     read_at TIMESTAMP WITH TIME ZONE
 );
 
--- Skills Matrix table
+-- Skills table
 CREATE TABLE skills (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL,
-    category VARCHAR(100),
+    name VARCHAR(255) NOT NULL UNIQUE,
+    category VARCHAR(100) NOT NULL,
     description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- User Skills table (many-to-many)
+-- User skills table
 CREATE TABLE user_skills (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id),
-    skill_id UUID NOT NULL REFERENCES skills(id),
-    proficiency_level INTEGER CHECK (proficiency_level >= 1 AND proficiency_level <= 5),
-    certified BOOLEAN DEFAULT false,
-    certification_date DATE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    skill_id UUID NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+    level VARCHAR(20) NOT NULL,
+    verified BOOLEAN DEFAULT false,
+    verified_by UUID REFERENCES users(id),
+    verified_date DATE,
+    requested_verification BOOLEAN DEFAULT false,
+    is_exclusive BOOLEAN DEFAULT false,
     notes TEXT,
+    points_awarded INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, skill_id)
+);
+
+-- Point entries table
+CREATE TABLE point_entries (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    points INTEGER NOT NULL,
+    reason VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Salary Records table
@@ -301,9 +315,11 @@ CREATE TRIGGER update_recipes_updated_at BEFORE UPDATE ON recipes
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_online_orders_updated_at BEFORE UPDATE ON online_orders 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_suppliers_updated_at BEFORE UPDATE ON suppliers 
+CREATE TRIGGER update_suppliers_updated_at BEFORE UPDATE ON suppliers
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_issues_updated_at BEFORE UPDATE ON issues 
+CREATE TRIGGER update_issues_updated_at BEFORE UPDATE ON issues
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_user_skills_updated_at BEFORE UPDATE ON user_skills 
+CREATE TRIGGER update_skills_updated_at BEFORE UPDATE ON skills
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_user_skills_updated_at BEFORE UPDATE ON user_skills
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

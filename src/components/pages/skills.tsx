@@ -97,6 +97,8 @@ export function SkillsPage() {
   const [selectedStaffSkill, setSelectedStaffSkill] = useState<StaffSkill | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  const skillAwardDefault = 50;
+
   // Form state
   const [addSkillForm, setAddSkillForm] = useState({
     staffId: '',
@@ -279,26 +281,33 @@ export function SkillsPage() {
   const handleVerifySkill = () => {
     if (!selectedStaffSkill) return;
 
-    const budgetNeeded = 50;
-    if (!selectedStaffSkill.verified && budgetNeeded > currentBudget) {
-      toast.error(`Insufficient budget. You have RM${currentBudget} remaining today.`);
-      return;
-    }
-
     const updated = updateStaffSkill(selectedStaffSkill.id, {
       verified: true,
       verifiedBy: currentUser.id,
       verifiedDate: new Date().toISOString().split('T')[0],
-      pointsAwarded: selectedStaffSkill.verified ? selectedStaffSkill.pointsAwarded : 50,
+      pointsAwarded: selectedStaffSkill.verified ? selectedStaffSkill.pointsAwarded : skillAwardDefault,
       requestedVerification: false
     });
 
     if (updated) {
       const staff = staffMembers.find(s => s.id === selectedStaffSkill.staffId);
-      toast.success(`Skill verified! +50 points awarded to ${staff?.name}`);
+      toast.success(`Skill verified! +${skillAwardDefault} points awarded to ${staff?.name}`);
       setIsVerificationOpen(false);
     } else {
       toast.error('Failed to verify skill');
+    }
+  };
+
+  const handleDenyVerification = (skill?: StaffSkill) => {
+    const target = skill || selectedStaffSkill;
+    if (!target) return;
+    const updated = updateStaffSkill(target.id, { requestedVerification: false });
+    if (updated) {
+      const staff = staffMembers.find(s => s.id === target.staffId);
+      toast.info(`Verification request denied for ${target.skillName} - ${staff?.name}`);
+      setIsVerificationOpen(false);
+    } else {
+      toast.error('Failed to update skill');
     }
   };
 
@@ -538,12 +547,21 @@ export function SkillsPage() {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent>
                                           {!skill.verified && (
-                                            <DropdownMenuItem onClick={() => {
-                                              setSelectedStaffSkill(skill);
-                                              setIsVerificationOpen(true);
-                                            }}>
-                                              Verify Skill
-                                            </DropdownMenuItem>
+                                            <>
+                                              <DropdownMenuItem
+                                                onClick={() => {
+                                                  setSelectedStaffSkill(skill);
+                                                  setIsVerificationOpen(true);
+                                                }}
+                                              >
+                                                {skill.requestedVerification ? 'Review Request' : 'Verify Skill'}
+                                              </DropdownMenuItem>
+                                              {skill.requestedVerification && (
+                                                <DropdownMenuItem onClick={() => handleDenyVerification(skill)}>
+                                                  Deny Request
+                                                </DropdownMenuItem>
+                                              )}
+                                            </>
                                           )}
                                           <DropdownMenuItem onClick={() => handleEditSkill(skill)}>
                                             Edit Skill
@@ -623,9 +641,24 @@ export function SkillsPage() {
                                             {staffSkill.verified ? (
                                               <CheckCircle className="size-3 text-success" />
                                             ) : staffSkill.requestedVerification ? (
-                                              <Clock className="size-3 text-warning" />
+                                              isManagement ? (
+                                                <Button
+                                                  size="sm"
+                                                  variant="ghost"
+                                                  className="h-6 px-2 text-xs"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedStaffSkill(staffSkill);
+                                                    setIsVerificationOpen(true);
+                                                  }}
+                                                >
+                                                  Review
+                                                </Button>
+                                              ) : (
+                                                <Clock className="size-3 text-warning" />
+                                              )
                                             ) : (
-                                              isManagement && (
+                                              isManagement ? (
                                                 <Button
                                                   size="sm"
                                                   variant="ghost"
@@ -638,6 +671,20 @@ export function SkillsPage() {
                                                 >
                                                   Verify
                                                 </Button>
+                                              ) : (
+                                                staff.id === currentUser.id && (
+                                                  <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-6 px-2 text-xs"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      handleRequestVerification(staff.id, skill.name);
+                                                    }}
+                                                  >
+                                                    Request
+                                                  </Button>
+                                                )
                                               )
                                             )}
                                           </div>
@@ -708,7 +755,7 @@ export function SkillsPage() {
                 </div>
                 <Progress value={(currentBudget / 500) * 100} className="h-2" />
                 <div className="text-xs text-muted-foreground">
-                  Each skill verification awards +50 points and consumes budget
+                  Each skill verification awards +{skillAwardDefault} points without affecting budget
                 </div>
               </div>
             </CardContent>
@@ -786,7 +833,7 @@ export function SkillsPage() {
                 checked={addSkillForm.verified}
                 onCheckedChange={(checked) => setAddSkillForm(prev => ({ ...prev, verified: checked }))}
               />
-              <Label htmlFor="verified">Verified (awards +50 points)</Label>
+              <Label htmlFor="verified">Verified (awards +{skillAwardDefault} points)</Label>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -813,15 +860,11 @@ export function SkillsPage() {
 
             {addSkillForm.verified && (
               <div className="space-y-2">
-                <Label className="text-sm">Budget Impact</Label>
+                <Label className="text-sm">Verification Award</Label>
                 <div className="bg-muted p-3 rounded-lg">
                   <div className="flex justify-between text-sm">
                     <span>Points Award:</span>
-                    <span className="font-semibold text-green-600">+50</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Budget Remaining:</span>
-                    <span className="font-semibold">RM{currentBudget} / RM500</span>
+                    <span className="font-semibold text-green-600">+{skillAwardDefault}</span>
                   </div>
                 </div>
               </div>
@@ -948,11 +991,7 @@ export function SkillsPage() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Points Award:</span>
-                  <span className="font-semibold text-green-600">+50</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Budget Remaining:</span>
-                  <span className="font-semibold">RM{currentBudget} / RM500</span>
+                  <span className="font-semibold text-green-600">+{skillAwardDefault}</span>
                 </div>
               </div>
 
@@ -968,6 +1007,9 @@ export function SkillsPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsVerificationOpen(false)}>
               Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => handleDenyVerification()}>
+              Deny
             </Button>
             <Button onClick={handleVerifySkill}>
               <Award className="size-4 mr-1" />
