@@ -20,6 +20,11 @@ interface ReminderOptions {
 
 export async function scheduleReminder(options: ReminderOptions) {
   if (!('serviceWorker' in navigator)) return;
+  if (Notification.permission !== 'granted') {
+    const granted = await requestNotificationPermission();
+    if (!granted) return;
+  }
+
   const registration = await navigator.serviceWorker.ready;
   registration.active?.postMessage({
     type: 'schedule-reminder',
