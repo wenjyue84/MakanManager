@@ -47,11 +47,10 @@ import {
 } from '../ui/dialog';
 import { currentUser } from '../../lib/data';
 import { staffMembers } from '../../lib/staff-data';
-import { 
-  disposals, 
-  formatDateTime,
+import {
+  disposals,
   formatTime,
-  type Disposal 
+  type Disposal
 } from '../../lib/operations-data';
 import { Station } from '../../lib/types';
 import { toast } from "sonner@2.0.3";
@@ -60,11 +59,14 @@ export function DisposalPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedReason, setSelectedReason] = useState<string>('all');
   const [selectedStation, setSelectedStation] = useState<string>('all');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [selectedDisposal, setSelectedDisposal] = useState<Disposal | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  const [disposalList, setDisposalList] = useState<Disposal[]>(() => [...disposals]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -92,14 +94,19 @@ export function DisposalPage() {
 
   // Filter disposals
   const filteredDisposals = useMemo(() => {
-    return disposals.filter(disposal => {
-      if (searchQuery && !disposal.item.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      if (selectedReason !== 'all' && disposal.reason !== selectedReason) return false;
-      if (selectedStation !== 'all' && disposal.station !== selectedStation) return false;
-      if (selectedDate && disposal.date !== selectedDate) return false;
-      return true;
-    });
-  }, [searchQuery, selectedReason, selectedStation, selectedDate]);
+    return disposalList
+      .filter(disposal => {
+        if (searchQuery && !disposal.item.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+        if (selectedReason !== 'all' && disposal.reason !== selectedReason) return false;
+        if (selectedStation !== 'all' && disposal.station !== selectedStation) return false;
+        if (startDate && new Date(disposal.date) < new Date(startDate)) return false;
+        if (endDate && new Date(disposal.date) > new Date(endDate)) return false;
+        return true;
+      })
+      .sort((a, b) =>
+        new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime()
+      );
+  }, [disposalList, searchQuery, selectedReason, selectedStation, startDate, endDate]);
 
   const summaryByReason = useMemo(() => {
     return filteredDisposals.reduce((acc, d) => {
@@ -133,7 +140,21 @@ export function DisposalPage() {
       toast.error('Please fill in all required fields');
       return;
     }
-
+    const newDisposal: Disposal = {
+      id: (Date.now().toString()),
+      date: formData.date,
+      time: formData.time,
+      item: formData.item,
+      quantity: Number(formData.quantity),
+      unit: formData.unit,
+      reason: formData.reason,
+      station: formData.station,
+      thrownBy: formData.thrownBy,
+      photo: formData.photo,
+      notes: formData.notes,
+      createdAt: new Date(`${formData.date}T${formData.time}`).toISOString()
+    };
+    setDisposalList(prev => [...prev, newDisposal]);
     toast.success('Disposal recorded successfully');
     setIsCreateOpen(false);
   };
@@ -146,7 +167,8 @@ export function DisposalPage() {
     setSearchQuery('');
     setSelectedReason('all');
     setSelectedStation('all');
-    setSelectedDate(new Date().toISOString().split('T')[0]);
+    setStartDate('');
+    setEndDate('');
   };
 
   const getReasonColor = (reason: string) => {
@@ -311,8 +333,14 @@ export function DisposalPage() {
               <div className="flex gap-2">
                 <Input
                   type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-40"
+                />
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
                   className="w-40"
                 />
 
@@ -343,7 +371,7 @@ export function DisposalPage() {
                   </SelectContent>
                 </Select>
 
-                {(searchQuery || selectedReason !== 'all' || selectedStation !== 'all' || selectedDate !== new Date().toISOString().split('T')[0]) && (
+                {(searchQuery || selectedReason !== 'all' || selectedStation !== 'all' || startDate || endDate) && (
                   <Button onClick={clearFilters} variant="outline" size="sm">
                     <X className="size-4 mr-1" />
                     Clear
