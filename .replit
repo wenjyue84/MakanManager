@@ -1,7 +1,6 @@
-modules = ["nodejs-20", "postgresql-16"]
+modules = ["nodejs-20", "web"]
 
 [deployment]
-build = ["npm", "run", "build"]
 run = ["npm", "run", "server"]
 
 [[ports]]
