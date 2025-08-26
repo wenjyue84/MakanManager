@@ -44,7 +44,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '../ui/tooltip';
-import { currentUser } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import { appSettings } from '../../lib/data';
 import { leaderboardData, getUserRank, getTotalActiveUsers, baharMonthlyRank } from '../../lib/leaderboard-data';
 import { UserRole, Station } from '../../lib/types';
@@ -64,13 +64,19 @@ export function Leaderboard({ onAdminClick, onProfileClick }: LeaderboardProps) 
   const [selectedStation, setSelectedStation] = useState<string>('all');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  const { user: currentUser, isLoading } = useCurrentUser();
+
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isManagement = currentUser.roles.some(role => 
+  if (isLoading || !currentUser) {
+    return <div>Loading...</div>;
+  }
+
+  const isManagement = currentUser.roles.some(role =>
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 

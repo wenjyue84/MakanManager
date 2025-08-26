@@ -46,7 +46,8 @@ import {
 import { StatusChip } from '../ui/status-chip';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { Task, Station, TaskStatus, User as UserType } from '../../lib/types';
-import { users, currentUser } from '../../lib/data';
+import { users } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import { TaskCreateModal } from '../modals/task-create-modal';
 import { TaskEditModal } from '../modals/task-edit-modal';
 import { TaskDetailModal } from '../modals/task-detail-modal';
@@ -105,7 +106,13 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
     setFilteredTasks(filtered);
   }, [tasks, selectedStatus, selectedStation, selectedAssignee, selectedAssigner, repeatOnly, searchQuery]);
 
-  const isManagement = currentUser.roles.some(role => 
+  const { user: currentUser, isLoading } = useCurrentUser();
+
+  if (isLoading || !currentUser) {
+    return <div>Loading...</div>;
+  }
+
+  const isManagement = currentUser.roles.some(role =>
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 

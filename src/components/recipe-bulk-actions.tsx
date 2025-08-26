@@ -31,6 +31,7 @@ import { Checkbox } from './ui/checkbox';
 import { Alert, AlertDescription } from './ui/alert';
 import { Recipe } from '../lib/recipes-data';
 import { RecipeService } from '../lib/services/recipes.service';
+import { useCurrentUser } from '../lib/hooks/use-current-user';
 import { toast } from "sonner@2.0.3";
 
 interface RecipeBulkActionsProps {
@@ -52,6 +53,7 @@ export function RecipeBulkActions({
   const [bulkTags, setBulkTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const { user: currentUser } = useCurrentUser();
 
   const categories = ['main-dish', 'soup', 'beverage', 'sauce-condiment'];
   const cuisines = ['malaysian', 'thai', 'indonesian'];
@@ -86,7 +88,7 @@ export function RecipeBulkActions({
   };
 
   const handleBulkEdit = async () => {
-    if (selectedRecipes.length === 0 || !bulkValue) return;
+    if (selectedRecipes.length === 0 || !bulkValue || !currentUser) return;
 
     setIsProcessing(true);
     try {
@@ -108,7 +110,7 @@ export function RecipeBulkActions({
             break;
         }
         
-        return RecipeService.updateRecipe(recipe.id, updateData);
+        return RecipeService.updateRecipe(recipe.id, updateData, currentUser);
       });
 
       const results = await Promise.allSettled(updatePromises);
