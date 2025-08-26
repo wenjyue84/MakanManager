@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   Search, 
   Plus, 
@@ -54,13 +54,11 @@ import { Separator } from '../ui/separator';
 import { Alert, AlertDescription } from '../ui/alert';
 import { useCurrentUserWithFallback } from '../../lib/hooks/use-current-user';
 import { staffMembers } from '../../lib/staff-data';
-import { 
-  staffMeals, 
-  formatCurrency, 
-  formatDateTime, 
-  formatTime,
-  type StaffMeal 
+import {
+  formatCurrency,
+  formatTime
 } from '../../lib/operations-data';
+import { type StaffMeal } from '../../lib/types';
 import { toast } from "sonner";
 
 interface StaffMealProps {
@@ -77,6 +75,9 @@ export function StaffMealPage({}: StaffMealProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showQuickEntry, setShowQuickEntry] = useState(false);
+  const [meals, setMeals] = useState<StaffMeal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { user: currentUser } = useCurrentUserWithFallback();
 
@@ -87,7 +88,7 @@ export function StaffMealPage({}: StaffMealProps) {
     time: new Date().toTimeString().slice(0, 5),
     dishName: '',
     cookedBy: currentUser.id,
-    eaters: [] as string[],
+    eaters: [currentUser.id] as string[],
     approximateCost: '',
     photo: '',
     notes: ''
@@ -96,19 +97,31 @@ export function StaffMealPage({}: StaffMealProps) {
   // Form validation state
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isManagement = currentUser.roles.some(role => 
+  useEffect(() => {
+    fetch('/api/staff-meals')
+      .then((res) => res.json())
+      .then((data: StaffMeal[]) => setMeals(data))
+      .catch(() => toast.error('Failed to load staff meals'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const isManagement = currentUser.roles.some(role =>
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 
+  if (loading) {
+    return <div className="p-4">Loading staff meals...</div>;
+  }
+
   // Filter meals based on search and filters and sort by most recent first
   const filteredMeals = useMemo(() => {
-    return staffMeals
+    return meals
       .filter(meal => {
         if (searchQuery && !meal.dishName.toLowerCase().includes(searchQuery.toLowerCase())) return false;
         if (selectedMealType !== 'all' && meal.mealType !== selectedMealType) return false;
@@ -122,11 +135,11 @@ export function StaffMealPage({}: StaffMealProps) {
         return true;
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [searchQuery, selectedMealType, dateRange]);
+  }, [meals, searchQuery, selectedMealType, dateRange]);
 
   // Calculate stats
   const weeklyStats = useMemo(() => {
-    const thisWeek = staffMeals.filter(meal => {
+    const thisWeek = meals.filter(meal => {
       const mealDate = new Date(meal.date);
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
@@ -137,16 +150,32 @@ export function StaffMealPage({}: StaffMealProps) {
       totalMeals: thisWeek.length,
       totalCost: thisWeek.reduce((sum, meal) => sum + meal.approximateCost, 0)
     };
-  }, []);
+  }, [meals]);
+
+  const weeklySummary = useMemo(() => {
+    const summary: Record<string, { meals: number; cost: number }> = {};
+    meals.forEach(meal => {
+      const date = new Date(meal.date);
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay());
+      const key = weekStart.toISOString().split('T')[0];
+      if (!summary[key]) summary[key] = { meals: 0, cost: 0 };
+      summary[key].meals += 1;
+      summary[key].cost += meal.approximateCost;
+    });
+    return Object.entries(summary)
+      .map(([weekStart, stats]) => ({ weekStart, ...stats }))
+      .sort((a, b) => new Date(b.weekStart).getTime() - new Date(a.weekStart).getTime());
+  }, [meals]);
 
   // Get current user's meals sorted by most recent first
   const currentUserMeals = useMemo(() => {
-    return staffMeals
+    return meals
       .filter(meal =>
         meal.cookedBy === currentUser.id || meal.eaters.includes(currentUser.id)
       )
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, []);
+  }, [meals]);
 
   const getUserById = (id: string) => {
     return staffMembers.find(member => member.id === id);
@@ -234,19 +263,21 @@ export function StaffMealPage({}: StaffMealProps) {
       errors.time = 'Time is required';
     }
 
+    if (!formData.photo) {
+      errors.photo = 'Photo is required';
+    }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  const handleSaveMeal = () => {
+  const handleSaveMeal = async () => {
     if (!validateForm()) {
       toast.error('Please fix the errors in the form');
       return;
     }
 
-    // In a real app, this would save to the database
-    const newMeal: StaffMeal = {
-      id: Date.now().toString(),
+    const payload = {
       date: formData.date,
       time: formData.time,
       mealType: formData.mealType,
@@ -256,46 +287,64 @@ export function StaffMealPage({}: StaffMealProps) {
       approximateCost: parseFloat(formData.approximateCost),
       photo: formData.photo,
       notes: formData.notes.trim(),
-      createdAt: new Date().toISOString()
     };
 
-    // Add to local data (in real app, this would be an API call)
-    staffMeals.unshift(newMeal);
-
-    toast.success('Staff meal recorded successfully!');
-    setIsCreateOpen(false);
-    
-    // Reset form
-    setFormData({
-      mealType: 'lunch',
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toTimeString().slice(0, 5),
-      dishName: '',
-      cookedBy: currentUser.id,
-      eaters: [currentUser.id],
-      approximateCost: '',
-      photo: '',
-      notes: ''
-    });
-  };
-
-  const handleDeleteMeal = () => {
-    if (!selectedMeal) return;
-    
-    // Remove from local data (in real app, this would be an API call)
-    const index = staffMeals.findIndex(meal => meal.id === selectedMeal.id);
-    if (index !== -1) {
-      staffMeals.splice(index, 1);
+    try {
+      const res = await fetch('/api/staff-meals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error();
+      const saved: StaffMeal = await res.json();
+      setMeals(prev => [saved, ...prev]);
+      toast.success('Staff meal recorded successfully!');
+      setIsCreateOpen(false);
+      setFormData({
+        mealType: 'lunch',
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toTimeString().slice(0, 5),
+        dishName: '',
+        cookedBy: currentUser.id,
+        eaters: [currentUser.id],
+        approximateCost: '',
+        photo: '',
+        notes: ''
+      });
+    } catch {
+      toast.error('Failed to save meal');
     }
-    
-    toast.success(`Meal "${selectedMeal.dishName}" deleted successfully`);
-    setIsDeleteDialogOpen(false);
-    setIsDetailOpen(false);
-    setSelectedMeal(null);
   };
 
-  const handlePhotoUpload = () => {
-    toast.info('Photo upload feature coming soon!');
+  const handleDeleteMeal = async () => {
+    if (!selectedMeal) return;
+
+    try {
+      const res = await fetch(`/api/staff-meals/${selectedMeal.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      setMeals(prev => prev.filter(meal => meal.id !== selectedMeal.id));
+      toast.success(`Meal "${selectedMeal.dishName}" deleted successfully`);
+      setIsDeleteDialogOpen(false);
+      setIsDetailOpen(false);
+      setSelectedMeal(null);
+    } catch {
+      toast.error('Failed to delete meal');
+    }
+  };
+
+  const handlePhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, photo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const clearFilters = () => {
@@ -527,6 +576,33 @@ export function StaffMealPage({}: StaffMealProps) {
                   Record My Meal
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Weekly Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Weekly Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Week Starting</TableHead>
+                    <TableHead className="text-right">Meals</TableHead>
+                    <TableHead className="text-right">Cost</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {weeklySummary.map(week => (
+                    <TableRow key={week.weekStart}>
+                      <TableCell>{week.weekStart}</TableCell>
+                      <TableCell className="text-right">{week.meals}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(week.cost)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
 
@@ -899,13 +975,23 @@ export function StaffMealPage({}: StaffMealProps) {
             </div>
 
             <div>
-              <Label>Photo</Label>
+              <Label>Photo *</Label>
               <div className="mt-1">
-                <Button onClick={handlePhotoUpload} variant="outline" className="w-full">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                />
+                <Button onClick={handlePhotoClick} variant="outline" className="w-full">
                   <Camera className="size-4 mr-2" />
-                  Upload Photo
+                  {formData.photo ? 'Change Photo' : 'Upload Photo'}
                 </Button>
               </div>
+              {formErrors.photo && (
+                <p className="text-sm text-red-600 mt-1">{formErrors.photo}</p>
+              )}
             </div>
 
             <div>

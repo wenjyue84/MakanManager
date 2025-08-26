@@ -75,6 +75,20 @@ export interface Recipe {
   station: Station;
 }
 
+export interface StaffMeal {
+  id: string;
+  date: string;
+  time: string;
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'break';
+  dishName: string;
+  cookedBy: string;
+  eaters: string[];
+  approximateCost: number;
+  photo?: string;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface Supplier {
   id: string;
   name: string;
