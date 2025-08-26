@@ -16,7 +16,8 @@ import {
 } from '../ui/select';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Task, Station, TaskStatus } from '../../lib/types';
-import { users, currentUser } from '../../lib/data';
+import { users } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 
 interface TaskEditModalProps {
   task: Task | null;
@@ -48,6 +49,12 @@ export function TaskEditModal({ task, isOpen, onClose, onTaskUpdate, onTaskDelet
   const statuses: TaskStatus[] = ['open', 'in-progress', 'on-hold', 'pending-review', 'overdue', 'done'];
   const proofTypes = ['none', 'photo', 'text', 'checklist'];
   const repeatOptions = ['', 'daily', 'weekly', 'monthly', 'custom'];
+
+  const { user: currentUser, isLoading } = useCurrentUser();
+
+  if (isLoading || !currentUser) {
+    return null;
+  }
 
   // Update form data when task changes
   useEffect(() => {
