@@ -186,7 +186,7 @@ const newRecipe = await RecipeService.createRecipe({
   ],
   allergens: [],
   notes: "Traditional Malaysian breakfast dish"
-});
+}, currentUser);
 ```
 
 ### Updating a Recipe
@@ -194,7 +194,7 @@ const newRecipe = await RecipeService.createRecipe({
 const updatedRecipe = await RecipeService.updateRecipe(recipeId, {
   prepTimeMinutes: 50,
   tags: ["signature", "traditional", "popular"]
-});
+}, currentUser);
 ```
 
 ### Deleting a Recipe
@@ -212,8 +212,8 @@ const result = await RecipeService.bulkDeleteRecipes(['id1', 'id2', 'id3']);
 console.log(`Deleted: ${result.success.length}, Failed: ${result.failed.length}`);
 
 // Bulk edit
-const updatePromises = selectedRecipes.map(recipe => 
-  RecipeService.updateRecipe(recipe.id, { category: 'main-dish' })
+const updatePromises = selectedRecipes.map(recipe =>
+  RecipeService.updateRecipe(recipe.id, { category: 'main-dish' }, currentUser)
 );
 await Promise.all(updatePromises);
 ```

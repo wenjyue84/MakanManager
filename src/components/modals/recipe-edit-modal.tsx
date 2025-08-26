@@ -18,7 +18,6 @@ import { Checkbox } from '../ui/checkbox';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Badge } from '../ui/badge';
 import { Recipe, RecipeIngredient, RecipeStep, RecipeAttachment, Station } from '../../lib/recipes-data';
-import { currentUser } from '../../lib/data';
 import { toast } from "sonner@2.0.3";
 
 interface RecipeEditModalProps {
