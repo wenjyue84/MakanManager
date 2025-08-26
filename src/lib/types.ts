@@ -85,21 +85,44 @@ export interface DisciplinaryAction {
   attachments?: string[];
 }
 
+export interface RecipeIngredient {
+  name: string;
+  quantity: number;
+  unit: string;
+}
+
+export interface RecipeStep {
+  step: number;
+  instruction: string;
+  timerMinutes?: number;
+}
+
+export interface RecipeAttachment {
+  id: string;
+  name: string;
+  type: 'image' | 'video' | 'document';
+  url: string;
+  uploadedBy: string;
+  uploadedDate: string;
+}
+
 export interface Recipe {
   id: string;
   name: string;
-  category: string;
-  photo: string;
-  ingredients: Array<{
-    name: string;
-    quantity: number;
-    unit: string;
-  }>;
-  steps: string[];
-  allergens: string[];
-  tags: string[];
-  prepTime: number;
+  category: 'main-dish' | 'soup' | 'beverage' | 'sauce-condiment';
+  cuisine: 'malaysian' | 'thai' | 'indonesian';
   station: Station;
+  yield: string;
+  prepTimeMinutes: number;
+  tags: string[];
+  photo: string;
+  ingredients: RecipeIngredient[];
+  steps: RecipeStep[];
+  allergens: ('shellfish' | 'dairy' | 'gluten' | 'nuts' | 'soy' | 'egg')[];
+  attachments?: RecipeAttachment[];
+  notes?: string;
+  lastUpdatedBy?: string;
+  lastUpdatedDate?: string;
 }
 
 export interface StaffMeal {
