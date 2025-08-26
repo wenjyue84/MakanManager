@@ -30,7 +30,7 @@ export interface Recipe {
   yield: string;
   prepTimeMinutes: number;
   tags: string[];
-  photo?: string;
+  photo: string;
   ingredients: RecipeIngredient[];
   steps: RecipeStep[];
   allergens: ('shellfish' | 'dairy' | 'gluten' | 'nuts' | 'soy' | 'egg')[];

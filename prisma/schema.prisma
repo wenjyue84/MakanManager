@@ -70,11 +70,24 @@ model Task {
   assignee    Staff?   @relation("StaffTasks", fields: [assigneeId], references: [id])
 }
 
-model Reminder {
-  id        String   @id @default(uuid())
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  taskId    String
-  remindAt  DateTime
-  message   String?
-  createdAt DateTime @default(now())
+
+model Recipe {
+  id            String   @id @default(uuid())
+  name          String
+  category      String
+  cuisine       String
+  station       String
+  yield         String
+  prepTime      Int
+  tags          String[]
+  photo         String
+  ingredients   Json
+  steps         String[]
+  allergens     String[]
+  notes         String?
+  createdBy     String
+  updatedBy     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
 }
