@@ -104,20 +104,22 @@ export function StaffMealPage({}: StaffMealProps) {
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 
-  // Filter meals based on search and filters
+  // Filter meals based on search and filters and sort by most recent first
   const filteredMeals = useMemo(() => {
-    return staffMeals.filter(meal => {
-      if (searchQuery && !meal.dishName.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      if (selectedMealType !== 'all' && meal.mealType !== selectedMealType) return false;
-      
-      // Date range filtering (simplified for demo)
-      if (dateRange === 'today') {
-        const today = new Date().toISOString().split('T')[0];
-        if (meal.date !== today) return false;
-      }
-      
-      return true;
-    });
+    return staffMeals
+      .filter(meal => {
+        if (searchQuery && !meal.dishName.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+        if (selectedMealType !== 'all' && meal.mealType !== selectedMealType) return false;
+
+        // Date range filtering (simplified for demo)
+        if (dateRange === 'today') {
+          const today = new Date().toISOString().split('T')[0];
+          if (meal.date !== today) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [searchQuery, selectedMealType, dateRange]);
 
   // Calculate stats
@@ -135,11 +137,13 @@ export function StaffMealPage({}: StaffMealProps) {
     };
   }, []);
 
-  // Get current user's meals
+  // Get current user's meals sorted by most recent first
   const currentUserMeals = useMemo(() => {
-    return staffMeals.filter(meal => 
-      meal.cookedBy === currentUser.id || meal.eaters.includes(currentUser.id)
-    );
+    return staffMeals
+      .filter(meal =>
+        meal.cookedBy === currentUser.id || meal.eaters.includes(currentUser.id)
+      )
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, []);
 
   const getUserById = (id: string) => {
