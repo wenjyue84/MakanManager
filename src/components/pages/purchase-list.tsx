@@ -94,6 +94,7 @@ export function PurchaseListPage() {
       preferredSupplier: item.preferredSupplier,
       neededBy: item.neededBy || '',
       urgency: item.urgency,
+      status: item.status,
       notes: item.notes || ''
     });
     setIsEditOpen(true);
@@ -117,7 +118,6 @@ export function PurchaseListPage() {
     } else {
       addPurchaseItem({
         ...formData,
-        status: 'new',
         addedBy: currentUser.id,
         createdAt: new Date().toISOString()
       });

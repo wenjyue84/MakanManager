@@ -5,8 +5,15 @@ export const validatePurchaseItem = (formData: {
   unit: string;
   preferredSupplier: string;
   quantity: number;
+  status: PurchaseItem['status'];
 }): boolean => {
-  return !!(formData.itemName && formData.unit && formData.preferredSupplier && formData.quantity > 0);
+  return !!(
+    formData.itemName &&
+    formData.unit &&
+    formData.preferredSupplier &&
+    formData.quantity > 0 &&
+    formData.status
+  );
 };
 
 export const validatePurchaseData = (purchaseData: {
@@ -73,6 +80,7 @@ export const initializePurchaseForm = () => ({
   preferredSupplier: '',
   neededBy: '',
   urgency: 'medium' as PurchaseItem['urgency'],
+  status: 'new' as PurchaseItem['status'],
   notes: ''
 });
 
