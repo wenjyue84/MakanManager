@@ -17,7 +17,8 @@ import {
 import { Switch } from '../ui/switch';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Task, Station, User as UserType } from '../../lib/types';
-import { users, currentUser } from '../../lib/data';
+import { users } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 
 interface TaskCreateModalProps {
   isOpen: boolean;
@@ -44,6 +45,12 @@ export function TaskCreateModal({ isOpen, onClose, onCreateTask }: TaskCreateMod
   const stations: Station[] = ['kitchen', 'front', 'store', 'outdoor'];
   const proofTypes = ['none', 'photo', 'text', 'checklist'];
   const repeatOptions = ['', 'daily', 'weekly', 'monthly', 'custom'];
+
+  const { user: currentUser, isLoading } = useCurrentUser();
+
+  if (isLoading || !currentUser) {
+    return null;
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

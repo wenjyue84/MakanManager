@@ -1,12 +1,13 @@
 import { query } from '../database';
-import { currentUser } from '../data';
 import {
   Recipe,
   RecipeIngredient,
   RecipeStep,
   RecipeAttachment
+
 } from '../types';
 import { jsPDF } from 'jspdf';
+
 
 export interface CreateRecipeData {
   name: string;
@@ -123,7 +124,10 @@ export class RecipeService {
   /**
    * Create a new recipe
    */
-  static async createRecipe(data: CreateRecipeData): Promise<Recipe> {
+  static async createRecipe(
+    data: CreateRecipeData,
+    user: Pick<User, 'id' | 'name'>
+  ): Promise<Recipe> {
     const stepTexts = data.steps.map(s => s.instruction);
 
     const result = await query(
@@ -147,20 +151,24 @@ export class RecipeService {
         stepTexts,
         data.allergens,
         data.notes,
-        currentUser.id,
-        currentUser.id
+        user.id,
+        user.id
       ]
     );
 
     const row = result.rows[0];
-    row.updated_by_name = currentUser.name;
+    row.updated_by_name = user.name;
     return this.mapRowToRecipe(row);
   }
 
   /**
    * Update an existing recipe
    */
-  static async updateRecipe(id: string, data: UpdateRecipeData): Promise<Recipe | null> {
+  static async updateRecipe(
+    id: string,
+    data: UpdateRecipeData,
+    user: Pick<User, 'id' | 'name'>
+  ): Promise<Recipe | null> {
     const fields: string[] = [];
     const values: any[] = [];
     let idx = 1;
@@ -219,7 +227,7 @@ export class RecipeService {
     }
 
     fields.push(`updated_by = $${idx++}`);
-    values.push(currentUser.id);
+    values.push(user.id);
     fields.push(`updated_at = CURRENT_TIMESTAMP`);
     values.push(id);
 
@@ -233,7 +241,7 @@ export class RecipeService {
     }
 
     const row = result.rows[0];
-    row.updated_by_name = currentUser.name;
+    row.updated_by_name = user.name;
     return this.mapRowToRecipe(row);
   }
 

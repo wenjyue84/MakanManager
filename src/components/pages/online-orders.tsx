@@ -53,7 +53,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
-import { currentUser } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import { staffMembers } from '../../lib/staff-data';
 import { 
   onlineOrders,
@@ -77,12 +77,17 @@ import {
 import { toast } from "sonner@2.0.3";
 
 export function OnlineOrdersPage() {
+  const { user: currentUser, isLoading } = useCurrentUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<OnlineOrder | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  if (isLoading || !currentUser) {
+    return <div>Loading...</div>;
+  }
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -216,6 +221,7 @@ export function OnlineOrdersPage() {
             <p className="text-muted-foreground">
               Manage customer orders from all platforms
             </p>
+            <p className="text-sm text-muted-foreground">Welcome back, {currentUser.name}</p>
           </div>
           <Button asChild variant="outline">
             <Link to="/order-form">View Order form as Guest</Link>

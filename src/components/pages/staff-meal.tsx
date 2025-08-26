@@ -52,7 +52,7 @@ import {
 } from '../ui/dialog';
 import { Separator } from '../ui/separator';
 import { Alert, AlertDescription } from '../ui/alert';
-import { currentUser } from '../../lib/data';
+import { useCurrentUserWithFallback } from '../../lib/hooks/use-current-user';
 import { staffMembers } from '../../lib/staff-data';
 import { 
   staffMeals, 
@@ -77,6 +77,8 @@ export function StaffMealPage({}: StaffMealProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showQuickEntry, setShowQuickEntry] = useState(false);
+
+  const { user: currentUser } = useCurrentUserWithFallback();
 
   // Form state
   const [formData, setFormData] = useState({

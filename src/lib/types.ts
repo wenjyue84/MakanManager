@@ -149,3 +149,36 @@ export interface AuthContextType extends AuthState {
   logout: () => void;
   clearError: () => void;
 }
+
+export interface Skill {
+  id: string;
+  name: string;
+  category: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserSkill {
+  id: string;
+  userId: string;
+  skillId: string;
+  level: 'basic' | 'proficient' | 'expert';
+  verified: boolean;
+  verifiedBy?: string;
+  verifiedDate?: string;
+  requestedVerification: boolean;
+  isExclusive?: boolean;
+  notes?: string;
+  pointsAwarded?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PointEntry {
+  id: string;
+  userId: string;
+  points: number;
+  reason?: string;
+  createdAt: string;
+}

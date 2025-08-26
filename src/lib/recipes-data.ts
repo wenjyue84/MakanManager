@@ -1,5 +1,4 @@
 import { Station } from './types';
-import { currentUser } from './data';
 
 export interface RecipeIngredient {
   name: string;
@@ -383,29 +382,36 @@ export const getRecipeById = (id: string): Recipe | undefined => {
 };
 
 // CRUD Operations
-export const createRecipe = (recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>): Recipe => {
+export const createRecipe = (
+  recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>,
+  userName: string
+): Recipe => {
   const newRecipe: Recipe = {
     ...recipeData,
     id: (recipes.length + 1).toString(), // Simple ID generation
-    lastUpdatedBy: currentUser.name,
+    lastUpdatedBy: userName,
     lastUpdatedDate: new Date().toISOString().split('T')[0]
   };
-  
+
   recipes.push(newRecipe);
   return newRecipe;
 };
 
-export const updateRecipe = (id: string, recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>): Recipe | null => {
+export const updateRecipe = (
+  id: string,
+  recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>,
+  userName: string
+): Recipe | null => {
   const index = recipes.findIndex(recipe => recipe.id === id);
   if (index === -1) return null;
-  
+
   const updatedRecipe: Recipe = {
     ...recipeData,
     id,
-    lastUpdatedBy: currentUser.name,
+    lastUpdatedBy: userName,
     lastUpdatedDate: new Date().toISOString().split('T')[0]
   };
-  
+
   recipes[index] = updatedRecipe;
   return updatedRecipe;
 };
