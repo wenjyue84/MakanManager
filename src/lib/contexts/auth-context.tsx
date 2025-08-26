@@ -78,37 +78,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Initialize authentication on mount
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       try {
-        console.log('Initializing authentication...');
-        const storedUser = AuthService.getStoredUser();
-        console.log('Stored user:', storedUser);
-        
-        // For development: auto-login with default user if no stored user
-        if (!storedUser) {
-          const defaultUser = {
-            id: '1',
-            name: 'Jay',
-            email: 'jay@makanmanager.com',
-            password: 'password123',
-            roles: ['owner' as const],
-            avatar: '👨‍💼',
-            phone: '+60123456789',
-            startDate: '2020-01-15',
-            emergencyContact: '+60123456790',
-            photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-            station: 'front' as const,
-            points: 2500,
-            weeklyPoints: 350,
-            monthlyPoints: 1200
-          };
-          AuthService.storeUser(defaultUser);
-          dispatch({ type: 'INIT_AUTH', payload: defaultUser });
+        const result = await AuthService.validateSession();
+        if (result.valid && result.user) {
+          dispatch({ type: 'INIT_AUTH', payload: result.user });
         } else {
-          dispatch({ type: 'INIT_AUTH', payload: storedUser });
+          dispatch({ type: 'INIT_AUTH', payload: null });
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
         dispatch({ type: 'INIT_AUTH', payload: null });
       }
     };
