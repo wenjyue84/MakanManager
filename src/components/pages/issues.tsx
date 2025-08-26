@@ -194,10 +194,10 @@ export function IssuesPage() {
 
     const totalExtra = Math.abs(approvalData.managerExtra) + Math.abs(approvalData.ownerExtra);
     
-    if (totalExtra > currentBudget) {
-      toast.error(`Insufficient budget. You have RM${currentBudget} remaining today.`);
-      return;
-    }
+  if (totalExtra > currentBudget) {
+    toast.error(`Insufficient budget. You have RM${currentBudget} remaining today.`);
+    return;
+  }
 
     const totalPoints =
       selectedIssue.defaultPoints + approvalData.managerExtra + approvalData.ownerExtra;
@@ -213,8 +213,11 @@ export function IssuesPage() {
       updatedAt: new Date().toISOString(),
     };
 
-    setIssueList(prev => prev.map(i => (i.id === selectedIssue.id ? updatedIssue : i)));
-    setSelectedIssue(updatedIssue);
+  setIssueList(prev => prev.map(i => (i.id === selectedIssue.id ? updatedIssue : i)));
+  setSelectedIssue(updatedIssue);
+
+  // Deduct from management daily budget
+  managementBudgets.set(currentUser.id, currentBudget - totalExtra);
 
     toast.success(
       `Issue ${approvalData.newStatus}. ${Math.abs(totalPoints)} points applied.`,

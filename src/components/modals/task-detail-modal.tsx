@@ -58,7 +58,7 @@ export function TaskDetailModal({ task, isOpen, onClose, onTaskUpdate }: TaskDet
   const canClaim = task.status === 'open' && 
     (isOwner ? assigner?.roles.includes('owner') : true);
 
-  // Budget calculation
+  // Budget calculation with daily budget tracking
   const currentBudget = managementBudgets.get(currentUser.id) || appSettings.managementDailyBudget;
   const calculatedPoints = Math.round(task.basePoints * multiplier[0] + adjustment);
   const budgetCost = Math.abs(adjustment);
