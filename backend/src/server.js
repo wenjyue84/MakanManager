@@ -1,9 +1,13 @@
 const express = require('express');
+const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 const app = express();
 app.use(express.json());
+
+// Serve static files from the dist directory
+app.use(express.static(path.join(__dirname, '../../dist')));
 
 // simple role checker
 function canEdit(req, staffId) {
@@ -106,6 +110,11 @@ app.post('/api/user-skills/:id/verify', async (req, res) => {
     });
   }
   res.json(updated);
+});
+
+// Catch-all route to serve React app for client-side routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../dist/index.html'));
 });
 
 const port = process.env.PORT || 4000;

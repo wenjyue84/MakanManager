@@ -1,21 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye,
-  Calendar,
-  Clock,
-  MapPin,
-  Star,
-  User,
-  RotateCcw
-} from 'lucide-react';
+import { Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
@@ -27,14 +13,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '../ui/select';
-import { Checkbox } from '../ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from '../ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -63,10 +41,6 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | 'all'>('all');
   const [selectedStation, setSelectedStation] = useState<Station | 'all'>('all');
-  const [selectedAssignee, setSelectedAssignee] = useState<string>('all');
-  const [selectedAssigner, setSelectedAssigner] = useState<string>('all');
-  const [repeatOnly, setRepeatOnly] = useState(false);
-  const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -87,15 +61,6 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
     if (selectedStation !== 'all') {
       filtered = filtered.filter(task => task.station === selectedStation);
     }
-    if (selectedAssignee !== 'all') {
-      filtered = filtered.filter(task => task.assigneeId === selectedAssignee);
-    }
-    if (selectedAssigner !== 'all') {
-      filtered = filtered.filter(task => task.assignerId === selectedAssigner);
-    }
-    if (repeatOnly) {
-      filtered = filtered.filter(task => task.repeat);
-    }
     if (searchQuery) {
       filtered = filtered.filter(task => 
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -104,7 +69,7 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
     }
 
     setFilteredTasks(filtered);
-  }, [tasks, selectedStatus, selectedStation, selectedAssignee, selectedAssigner, repeatOnly, searchQuery]);
+  }, [tasks, selectedStatus, selectedStation, searchQuery]);
 
   const { user: currentUser, isLoading } = useCurrentUser();
 
@@ -141,20 +106,11 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const getProofIcon = (proofType: string) => {
-    switch (proofType) {
-      case 'photo': return '📷';
-      case 'text': return '📝';
-      case 'checklist': return '✅';
-      default: return '📄';
-    }
-  };
-
   // CRUD Operations
   const handleCreateTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'overdueDays'>) => {
     const newTask: Task = {
       ...taskData,
-      id: Date.now().toString(), // Simple ID generation for demo
+      id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       overdueDays: 0
     };
@@ -188,43 +144,17 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
     setIsEditModalOpen(true);
   };
 
-  const handleBulkAction = (action: 'delete' | 'assign' | 'change-status') => {
-    if (action === 'delete') {
-      const updatedTasks = tasks.filter(task => !selectedTasks.includes(task.id));
-      onTasksChange(updatedTasks);
-      setSelectedTasks([]);
-      toast.success(`${selectedTasks.length} tasks deleted successfully!`);
-    }
-    // Add other bulk actions as needed
-  };
-
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedStatus('all');
     setSelectedStation('all');
-    setSelectedAssignee('all');
-    setSelectedAssigner('all');
-    setRepeatOnly(false);
   };
 
   const TaskRow = ({ task }: { task: Task }) => {
     const assignee = task.assigneeId ? getUserById(task.assigneeId) : null;
-    const assigner = getUserById(task.assignerId);
 
     return (
       <TableRow className="hover:bg-accent/50">
-        <TableCell className="w-12">
-          <Checkbox
-            checked={selectedTasks.includes(task.id)}
-            onCheckedChange={(checked) => {
-              if (checked) {
-                setSelectedTasks([...selectedTasks, task.id]);
-              } else {
-                setSelectedTasks(selectedTasks.filter(id => id !== task.id));
-              }
-            }}
-          />
-        </TableCell>
         <TableCell>
           <div className="space-y-1">
             <div className="font-medium cursor-pointer hover:text-primary" onClick={() => handleViewTask(task)}>
@@ -233,12 +163,6 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
             <div className="text-sm text-muted-foreground line-clamp-2">
               {task.description}
             </div>
-            {task.repeat && (
-              <Badge variant="secondary" className="text-xs">
-                <RotateCcw className="size-3 mr-1" />
-                {task.repeat}
-              </Badge>
-            )}
           </div>
         </TableCell>
         <TableCell>
@@ -257,8 +181,7 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
         </TableCell>
         <TableCell className="text-center">
           <div className="flex items-center justify-center gap-1">
-            <Star className="size-4 text-yellow-500" />
-            <span>{task.basePoints}</span>
+            <span className="font-medium">{task.basePoints}</span>
           </div>
         </TableCell>
         <TableCell>
@@ -273,12 +196,6 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
           ) : (
             <span className="text-muted-foreground text-sm">Unassigned</span>
           )}
-        </TableCell>
-        <TableCell>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{getProofIcon(task.proofType)}</span>
-            <span className="text-xs capitalize">{task.proofType}</span>
-          </div>
         </TableCell>
         <TableCell>
           <div className="flex items-center gap-1">
@@ -298,35 +215,16 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
                 <Edit className="size-4" />
               </Button>
             )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="ghost">
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleViewTask(task)}>
-                  <Eye className="size-4 mr-2" />
-                  View Details
-                </DropdownMenuItem>
-                {isManagement && (
-                  <>
-                    <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                      <Edit className="size-4 mr-2" />
-                      Edit Task
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => handleDeleteTask(task.id)}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="size-4 mr-2" />
-                      Delete Task
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {isManagement && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleDeleteTask(task.id)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            )}
           </div>
         </TableCell>
       </TableRow>
@@ -344,35 +242,23 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
         {isManagement && (
           <Button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2">
             <Plus className="size-4" />
-            New Task
+            Add Task
           </Button>
         )}
       </div>
 
-      {/* Filters */}
+      {/* Simple Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="size-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-            {/* Search */}
-            <div className="lg:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search tasks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <Input
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
 
-            {/* Status Filter */}
             <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as TaskStatus | 'all')}>
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
@@ -387,7 +273,6 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
               </SelectContent>
             </Select>
 
-            {/* Station Filter */}
             <Select value={selectedStation} onValueChange={(value) => setSelectedStation(value as Station | 'all')}>
               <SelectTrigger>
                 <SelectValue placeholder="Station" />
@@ -402,74 +287,12 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
               </SelectContent>
             </Select>
 
-            {/* Assignee Filter */}
-            <Select value={selectedAssignee} onValueChange={setSelectedAssignee}>
-              <SelectTrigger>
-                <SelectValue placeholder="Assignee" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Assignees</SelectItem>
-                {users.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={repeatOnly}
-                  onChange={(e) => setRepeatOnly(e.target.checked)}
-                  className="rounded"
-                />
-                <span className="text-sm">Repeat tasks only</span>
-              </label>
-            </div>
-            
-            {(searchQuery || selectedStatus !== 'all' || selectedStation !== 'all' || 
-              selectedAssignee !== 'all' || selectedAssigner !== 'all' || repeatOnly) && (
-              <Button onClick={clearFilters} variant="outline" size="sm">
-                Clear Filters
-              </Button>
-            )}
+            <Button onClick={clearFilters} variant="outline" size="sm">
+              Clear Filters
+            </Button>
           </div>
         </CardContent>
       </Card>
-
-      {/* Bulk Actions */}
-      {selectedTasks.length > 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">
-                {selectedTasks.length} task{selectedTasks.length !== 1 ? 's' : ''} selected
-              </span>
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="destructive"
-                  onClick={() => handleBulkAction('delete')}
-                >
-                  <Trash2 className="size-4 mr-2" />
-                  Delete Selected
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => setSelectedTasks([])}
-                >
-                  Clear Selection
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Tasks Table */}
       <Card>
@@ -478,35 +301,21 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedTasks.length === filteredTasks.length && filteredTasks.length > 0}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedTasks(filteredTasks.map(t => t.id));
-                        } else {
-                          setSelectedTasks([]);
-                        }
-                      }}
-                    />
-                  </TableHead>
                   <TableHead>Task</TableHead>
                   <TableHead>Station</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Due</TableHead>
                   <TableHead className="text-center">Points</TableHead>
                   <TableHead>Assignee</TableHead>
-                  <TableHead>Proof</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredTasks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8">
                       <div className="text-muted-foreground">
-                        {searchQuery || selectedStatus !== 'all' || selectedStation !== 'all' || 
-                         selectedAssignee !== 'all' || selectedAssigner !== 'all' || repeatOnly
+                        {searchQuery || selectedStatus !== 'all' || selectedStation !== 'all'
                           ? 'No tasks match the current filters.'
                           : 'No tasks found. Create your first task to get started!'}
                       </div>

@@ -135,9 +135,67 @@ app.get('/api/reports', authenticate, requirePermission('view_reports'), (req, r
   res.json({ reports: [] });
 });
 
+// Staff Meals API endpoints
+// In-memory storage for staff meals (in production this would be a database)
+const staffMeals = [
+  {
+    id: '1',
+    date: '2024-01-15',
+    time: '12:00',
+    mealType: 'lunch',
+    dishName: 'Chicken Fried Rice',
+    cookedBy: '3', // Lily (head-of-kitchen)
+    eaters: ['1', '2', '3'], // Jay, Simon, Lily
+    approximateCost: 25.50,
+    photo: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop',
+    notes: 'Quick lunch using leftover rice and vegetables',
+    createdAt: '2024-01-15T12:00:00Z'
+  },
+  {
+    id: '2',
+    date: '2024-01-15',
+    time: '18:00',
+    mealType: 'dinner',
+    dishName: 'Beef Noodle Soup',
+    cookedBy: '2', // Simon (manager)
+    eaters: ['1', '2', '3'], // Jay, Simon, Lily
+    approximateCost: 30.00,
+    photo: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop',
+    notes: 'Warm soup for dinner',
+    createdAt: '2024-01-15T18:00:00Z'
+  }
+];
+
+// Get all staff meals
+app.get('/api/staff-meals', (req, res) => {
+  res.json(staffMeals);
+});
+
+// Create a new staff meal
+app.post('/api/staff-meals', (req, res) => {
+  const newMeal = {
+    id: Date.now().toString(),
+    ...req.body,
+    createdAt: new Date().toISOString()
+  };
+  staffMeals.push(newMeal);
+  res.status(201).json(newMeal);
+});
+
+// Delete a staff meal
+app.delete('/api/staff-meals/:id', (req, res) => {
+  const { id } = req.params;
+  const index = staffMeals.findIndex(meal => meal.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Meal not found' });
+  }
+  staffMeals.splice(index, 1);
+  res.json({ success: true });
+});
+
 // Start server only if this file is run directly
 if (require.main === module) {
-  const PORT = process.env.PORT || 3000;
+  const PORT = process.env.PORT || 3001;
   app.listen(PORT, () => console.log(`Auth server running on port ${PORT}`));
 }
 

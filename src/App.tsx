@@ -144,141 +144,89 @@ function AppContent() {
 
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/order-form" element={<OrderFormPage />} />
-        <Route
-          path="/*"
-          element={
-            <ProtectedRoute>
-              <EnhancedAppLayout onUserChange={handleUserChange}>
-                <Routes>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <Dashboard
-                        onTaskClick={handleTaskClick}
-                        onCreateTask={handleCreateTask}
-                        onCreateDiscipline={handleCreateDiscipline}
-                        onNewOrder={handleNewOrder}
-                        onCashCount={handleCashCount}
-                        onStaffMeal={handleStaffMeal}
-                        onReportIssue={handleReportIssue}
-                        onClockIn={handleClockIn}
-                        onRequestMeal={onRequestMeal}
-                        onTakeBreak={onTakeBreak}
-                        onGetHelp={onGetHelp}
-                      />
-                    }
-                  />
-                  <Route
-                    path="/tasks"
-                    element={
-                      <Tasks
-                        tasks={tasks}
-                        loading={isLoading}
-                        error={error}
-                        onTaskClick={handleTaskClick}
-                        onTaskUpdate={handleTaskUpdate}
-                        onCreateTask={handleCreateTask}
-                        onCreateDiscipline={handleCreateDiscipline}
-                        currentLanguage="en"
-                      />
-                    }
-                  />
-                  <Route path="/task-management" element={<TaskManagementDemo />} />
-                  <Route path="/leaderboard" element={<Leaderboard />} />
-                  <Route path="/staff" element={<Staff onProfileClick={handleProfileClick} />} />
-                  <Route path="/recipes" element={<Recipes />} />
-                  <Route path="/staff-meal" element={<StaffMealPage />} />
-                  <Route path="/disposal" element={<DisposalPage />} />
-                  <Route path="/issues" element={<IssuesPage />} />
-                  <Route path="/discipline" element={<DisciplinePage />} />
-                  <Route path="/purchase-list" element={<PurchaseListPage />} />
-                  <Route path="/skills" element={<SkillsPage />} />
-                  <Route path="/suppliers" element={<SuppliersPage />} />
-                  <Route path="/salary" element={<SalaryPage />} />
-                  <Route path="/online-orders" element={<OnlineOrdersPage />} />
-                  <Route path="/cash" element={<CashPage />} />
-                  <Route path="/reports" element={<ReportsPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                </Routes>
-              </EnhancedAppLayout>
+    <Routes>
+      <Route path="/order-form" element={<OrderFormPage />} />
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <EnhancedAppLayout onUserChange={handleUserChange}>
+              <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <Dashboard
+                      onTaskClick={handleTaskClick}
+                      onCreateTask={handleCreateTask}
+                      onCreateDiscipline={handleCreateDiscipline}
+                      onNewOrder={handleNewOrder}
+                      onCashCount={handleCashCount}
+                      onStaffMeal={handleStaffMeal}
+                      onReportIssue={handleReportIssue}
+                      onClockIn={handleClockIn}
+                      onRequestMeal={onRequestMeal}
+                      onTakeBreak={onTakeBreak}
+                      onGetHelp={onGetHelp}
+                    />
+                  }
+                />
+                <Route
+                  path="/tasks"
+                  element={
+                    <Tasks
+                      tasks={tasks}
+                      loading={isLoading}
+                      error={error}
+                      onTaskClick={handleTaskClick}
+                      onTaskUpdate={handleTaskUpdate}
+                      onCreateTask={handleCreateTask}
+                      onCreateDiscipline={handleCreateDiscipline}
+                      currentLanguage="en"
+                    />
+                  }
+                />
+                <Route path="/task-management" element={<TaskManagementDemo />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/staff" element={<Staff onProfileClick={handleProfileClick} />} />
+                <Route path="/recipes" element={<Recipes />} />
+                <Route path="/staff-meal" element={<StaffMealPage />} />
+                <Route path="/disposal" element={<DisposalPage />} />
+                <Route path="/issues" element={<IssuesPage />} />
+                <Route path="/discipline" element={<DisciplinePage />} />
+                <Route path="/purchase-list" element={<PurchaseListPage />} />
+                <Route path="/skills" element={<SkillsPage />} />
+                <Route path="/suppliers" element={<SuppliersPage />} />
+                <Route path="/salary" element={<SalaryPage />} />
+                <Route path="/online-orders" element={<OnlineOrdersPage />} />
+                <Route path="/cash" element={<CashPage />} />
+                <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </EnhancedAppLayout>
 
-              <TaskCreateModal
-                isOpen={isCreateTaskModalOpen}
-                onClose={() => setIsCreateTaskModalOpen(false)}
-                onCreateTask={handleTaskCreate}
-              />
+            <TaskCreateModal
+              isOpen={isCreateTaskModalOpen}
+              onClose={() => setIsCreateTaskModalOpen(false)}
+              onCreateTask={handleTaskCreate}
+            />
 
-              <TaskDetailModal
-                task={selectedTask}
-                isOpen={isTaskModalOpen}
-                onClose={() => {
-                  setIsTaskModalOpen(false);
-                  setSelectedTask(null);
-                }}
-                onUpdate={handleTaskUpdate}
-              />
+            <TaskDetailModal
+              task={selectedTask}
+              isOpen={isTaskModalOpen}
+              onClose={() => {
+                setIsTaskModalOpen(false);
+                setSelectedTask(null);
+              }}
+              onUpdate={handleTaskUpdate}
+            />
 
-            } />
-            <Route path="/tasks" element={
-              <Tasks
-                tasks={tasks}
-                loading={isLoading}
-                error={error}
-                onTaskClick={handleTaskClick}
-                onTaskUpdate={handleTaskUpdate}
-                onCreateTask={handleCreateTask}
-                onCreateDiscipline={handleCreateDiscipline}
-                currentLanguage="en"
-              />
-            } />
-            <Route path="/task-management" element={<TaskManagementDemo />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/staff" element={<Staff onProfileClick={handleProfileClick} />} />
-            <Route path="/recipes" element={<Recipes />} />
-            <Route path="/staff-meal" element={<StaffMealPage />} />
-            <Route path="/disposal" element={<DisposalPage />} />
-            <Route path="/issues" element={<IssuesPage />} />
-            <Route path="/discipline" element={<DisciplinePage />} />
-            <Route path="/purchase-list" element={<PurchaseListPage />} />
-            <Route path="/skills" element={<SkillsPage />} />
-            <Route path="/suppliers" element={<SuppliersPage />} />
-            <Route path="/salary" element={<SalaryPage />} />
-            <Route path="/online-orders" element={<OnlineOrdersPage />} />
-            <Route path="/cash" element={<CashPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </EnhancedAppLayout>
-
-        <TaskCreateModal
-          isOpen={isCreateTaskModalOpen}
-          onClose={() => setIsCreateTaskModalOpen(false)}
-          onCreateTask={handleTaskCreate}
-        />
-
-        <TaskDetailModal
-          task={selectedTask}
-          isOpen={isTaskModalOpen}
-          onClose={() => {
-            setIsTaskModalOpen(false);
-            setSelectedTask(null);
-          }}
-          onUpdate={handleTaskUpdate}
-        />
-
-
-
-              <Toaster />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </Router>
+            <Toaster />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
 
@@ -286,7 +234,9 @@ export default function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <AppContent />
+        <Router>
+          <AppContent />
+        </Router>
       </LanguageProvider>
     </AuthProvider>
   );

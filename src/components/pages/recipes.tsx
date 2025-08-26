@@ -119,8 +119,6 @@ export function Recipes({}: RecipesProps) {
   const [recipesList, setRecipesList] = useState<Recipe[]>([]);
   const { user: currentUser, isLoading: isUserLoading } = useCurrentUser();
 
-  const { user: currentUser, isLoading: userLoading } = useCurrentUser();
-
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);

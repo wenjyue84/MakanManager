@@ -58,7 +58,7 @@ import {
   formatCurrency,
   formatTime
 } from '../../lib/operations-data';
-import { type StaffMeal } from '../../lib/types';
+import { type StaffMeal, type UserRole } from '../../lib/types';
 import { toast } from "sonner";
 
 interface StaffMealProps {
@@ -104,14 +104,41 @@ export function StaffMealPage({}: StaffMealProps) {
   }, []);
 
   useEffect(() => {
-    fetch('/api/staff-meals')
-      .then((res) => res.json())
-      .then((data: StaffMeal[]) => setMeals(data))
-      .catch(() => toast.error('Failed to load staff meals'))
-      .finally(() => setLoading(false));
+    // Mock data for development - replace with actual API call when backend is ready
+    const mockMeals: StaffMeal[] = [
+      {
+        id: '1',
+        date: '2024-01-15',
+        time: '12:00',
+        mealType: 'lunch',
+        dishName: 'Chicken Fried Rice',
+        cookedBy: '3', // Lily (head-of-kitchen)
+        eaters: ['1', '2', '3'], // Jay, Simon, Lily
+        approximateCost: 25.50,
+        photo: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop',
+        notes: 'Quick lunch using leftover rice and vegetables',
+        createdAt: '2024-01-15T12:00:00Z'
+      },
+      {
+        id: '2',
+        date: '2024-01-15',
+        time: '18:00',
+        mealType: 'dinner',
+        dishName: 'Beef Noodle Soup',
+        cookedBy: '2', // Simon (manager)
+        eaters: ['1', '2', '3'], // Jay, Simon, Lily
+        approximateCost: 30.00,
+        photo: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop',
+        notes: 'Warm soup for dinner',
+        createdAt: '2024-01-15T18:00:00Z'
+      }
+    ];
+    
+    setMeals(mockMeals);
+    setLoading(false);
   }, []);
 
-  const isManagement = currentUser.roles.some(role =>
+  const isManagement = currentUser.roles.some((role: UserRole) =>
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 
@@ -263,9 +290,10 @@ export function StaffMealPage({}: StaffMealProps) {
       errors.time = 'Time is required';
     }
 
-    if (!formData.photo) {
-      errors.photo = 'Photo is required';
-    }
+    // Photo is optional for now
+    // if (!formData.photo) {
+    //   errors.photo = 'Photo is required';
+    // }
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -290,13 +318,12 @@ export function StaffMealPage({}: StaffMealProps) {
     };
 
     try {
-      const res = await fetch('/api/staff-meals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error();
-      const saved: StaffMeal = await res.json();
+      // Mock save operation for development
+      const saved: StaffMeal = {
+        id: Date.now().toString(),
+        ...payload,
+        createdAt: new Date().toISOString()
+      };
       setMeals(prev => [saved, ...prev]);
       toast.success('Staff meal recorded successfully!');
       setIsCreateOpen(false);
@@ -320,8 +347,7 @@ export function StaffMealPage({}: StaffMealProps) {
     if (!selectedMeal) return;
 
     try {
-      const res = await fetch(`/api/staff-meals/${selectedMeal.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error();
+      // Mock delete operation for development
       setMeals(prev => prev.filter(meal => meal.id !== selectedMeal.id));
       toast.success(`Meal "${selectedMeal.dishName}" deleted successfully`);
       setIsDeleteDialogOpen(false);

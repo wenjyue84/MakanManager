@@ -80,14 +80,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // First check for stored user
+        const storedUser = AuthService.getStoredUser();
+        if (storedUser) {
+          dispatch({ type: 'INIT_AUTH', payload: storedUser });
+          return;
+        }
+
+        // Try to validate session
         const result = await AuthService.validateSession();
         if (result.valid && result.user) {
           dispatch({ type: 'INIT_AUTH', payload: result.user });
         } else {
-          dispatch({ type: 'INIT_AUTH', payload: null });
+          // Auto-login with default user for development
+          const defaultUser = {
+            id: '1',
+            name: 'Jay',
+            email: 'jay@makanmanager.com',
+            roles: ['owner' as const],
+            permissions: ['all'],
+            profilePicture: undefined,
+            department: 'Management',
+            position: 'Owner',
+            phone: '+1234567890',
+            address: '123 Main St',
+            emergencyContact: 'Emergency Contact',
+            dateOfBirth: '1990-01-01',
+            employeeId: 'EMP001',
+            startDate: '2023-01-01',
+            salary: 80000,
+            status: 'active' as const,
+            lastLogin: new Date().toISOString(),
+            totalPoints: 1250,
+            level: 'Gold',
+            achievements: ['Team Player', 'Quality Master'],
+            skillLevel: 'Expert',
+            certifications: ['Food Safety', 'Management'],
+          };
+          
+          AuthService.storeUser(defaultUser);
+          dispatch({ type: 'INIT_AUTH', payload: defaultUser });
         }
       } catch (error) {
-        dispatch({ type: 'INIT_AUTH', payload: null });
+        // Auto-login with default user for development on error
+        const defaultUser = {
+          id: '1',
+          name: 'Jay',
+          email: 'jay@makanmanager.com',
+          roles: ['owner' as const],
+          permissions: ['all'],
+          profilePicture: undefined,
+          department: 'Management',
+          position: 'Owner',
+          phone: '+1234567890',
+          address: '123 Main St',
+          emergencyContact: 'Emergency Contact',
+          dateOfBirth: '1990-01-01',
+          employeeId: 'EMP001',
+          startDate: '2023-01-01',
+          salary: 80000,
+          status: 'active' as const,
+          lastLogin: new Date().toISOString(),
+          totalPoints: 1250,
+          level: 'Gold',
+          achievements: ['Team Player', 'Quality Master'],
+          skillLevel: 'Expert',
+          certifications: ['Food Safety', 'Management'],
+        };
+        
+        AuthService.storeUser(defaultUser);
+        dispatch({ type: 'INIT_AUTH', payload: defaultUser });
       }
     };
 

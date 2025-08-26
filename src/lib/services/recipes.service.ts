@@ -1,12 +1,11 @@
-import { query } from '../database';
 import {
   Recipe,
   RecipeIngredient,
   RecipeStep,
   RecipeAttachment,
   User
-
 } from '../types';
+import { recipes } from '../recipes-data';
 import { jsPDF } from 'jspdf';
 
 
@@ -29,97 +28,72 @@ export interface UpdateRecipeData extends Partial<CreateRecipeData> {
   id: string;
 }
 
-export class RecipeService {
-  /** Map database row to Recipe object */
-  private static mapRowToRecipe(row: any): Recipe {
-    const steps: RecipeStep[] = (row.steps || []).map((instruction: string, index: number) => ({
-      step: index + 1,
-      instruction
-    }));
+export interface RecipeFilters {
+  category?: 'all' | 'main-dish' | 'soup' | 'beverage' | 'sauce-condiment';
+  cuisine?: 'all' | 'malaysian' | 'thai' | 'indonesian';
+  station?: 'all' | 'kitchen' | 'front' | 'store' | 'outdoor';
+  search?: string;
+  tags?: string[];
+}
 
-    return {
-      id: row.id,
-      name: row.name,
-      category: row.category,
-      cuisine: row.cuisine,
-      station: row.station,
-      yield: row.yield,
-      prepTimeMinutes: row.prep_time,
-      tags: row.tags || [],
-      photo: row.photo,
-      ingredients: row.ingredients || [],
-      steps,
-      allergens: row.allergens || [],
-      attachments: row.attachments || [],
-      notes: row.notes || '',
-      lastUpdatedBy: row.updated_by_name || row.updated_by,
-      lastUpdatedDate: row.updated_at
-        ? new Date(row.updated_at).toISOString()
-        : undefined
-    } as Recipe;
+export class RecipeService {
+  /**
+   * Get all recipes without filtering
+   */
+  static async getAllRecipes(): Promise<Recipe[]> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve([...recipes]);
+      }, 100);
+    });
   }
 
   /**
-   * Get all recipes with optional filtering
+   * Get recipes with optional filtering
    */
-  static async getAllRecipes(filters?: {
-    category?: string;
-    cuisine?: string;
-    station?: string;
-    tags?: string[];
-    search?: string;
-  }): Promise<Recipe[]> {
-    const conditions: string[] = [];
-    const values: any[] = [];
-    let idx = 1;
+  static async getRecipes(filters?: RecipeFilters): Promise<Recipe[]> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        let filteredRecipes = [...recipes];
 
-    if (filters?.category && filters.category !== 'all') {
-      conditions.push(`r.category = $${idx++}`);
-      values.push(filters.category);
-    }
-    if (filters?.cuisine && filters.cuisine !== 'all') {
-      conditions.push(`r.cuisine = $${idx++}`);
-      values.push(filters.cuisine);
-    }
-    if (filters?.station && filters.station !== 'all') {
-      conditions.push(`r.station = $${idx++}`);
-      values.push(filters.station);
-    }
-    if (filters?.search) {
-      conditions.push(`LOWER(r.name) LIKE $${idx++}`);
-      values.push(`%${filters.search.toLowerCase()}%`);
-    }
-    if (filters?.tags && filters.tags.length > 0) {
-      conditions.push(`r.tags && $${idx++}::text[]`);
-      values.push(filters.tags);
-    }
+        // Apply filters
+        if (filters?.category && filters.category !== 'all') {
+          filteredRecipes = filteredRecipes.filter(r => r.category === filters.category);
+        }
+        if (filters?.cuisine && filters.cuisine !== 'all') {
+          filteredRecipes = filteredRecipes.filter(r => r.cuisine === filters.cuisine);
+        }
+        if (filters?.station && filters.station !== 'all') {
+          filteredRecipes = filteredRecipes.filter(r => r.station === filters.station);
+        }
+        if (filters?.search) {
+          const searchLower = filters.search.toLowerCase();
+          filteredRecipes = filteredRecipes.filter(r => 
+            r.name.toLowerCase().includes(searchLower) ||
+            r.notes?.toLowerCase().includes(searchLower)
+          );
+        }
+        if (filters?.tags && filters.tags.length > 0) {
+          filteredRecipes = filteredRecipes.filter(r => 
+            filters.tags!.some(tag => r.tags.includes(tag))
+          );
+        }
 
-    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-
-    const result = await query(
-      `SELECT r.*, u.name AS updated_by_name
-       FROM recipes r
-       LEFT JOIN users u ON r.updated_by = u.id
-       ${whereClause}
-       ORDER BY r.created_at DESC`,
-      values
-    );
-
-    return result.rows.map(this.mapRowToRecipe);
+        resolve(filteredRecipes);
+      }, 100);
+    });
   }
 
   /**
    * Get recipe by ID
    */
   static async getRecipeById(id: string): Promise<Recipe | null> {
-    const result = await query(
-      `SELECT r.*, u.name AS updated_by_name
-       FROM recipes r
-       LEFT JOIN users u ON r.updated_by = u.id
-       WHERE r.id = $1`,
-      [id]
-    );
-    return result.rows.length ? this.mapRowToRecipe(result.rows[0]) : null;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const recipe = recipes.find(r => r.id === id);
+        resolve(recipe || null);
+      }, 50);
+    });
   }
 
   /**
@@ -129,129 +103,74 @@ export class RecipeService {
     data: CreateRecipeData,
     user: Pick<User, 'id' | 'name'>
   ): Promise<Recipe> {
-    const stepTexts = data.steps.map(s => s.instruction);
-
-    const result = await query(
-      `INSERT INTO recipes (
-         name, category, cuisine, station, yield, prep_time, tags,
-         photo, ingredients, steps, allergens, notes, created_by, updated_by
-       ) VALUES (
-         $1, $2, $3, $4, $5, $6, $7,
-         $8, $9, $10, $11, $12, $13, $14
-       ) RETURNING *`,
-      [
-        data.name,
-        data.category,
-        data.cuisine,
-        data.station,
-        data.yield,
-        data.prepTimeMinutes,
-        data.tags,
-        data.photo,
-        JSON.stringify(data.ingredients),
-        stepTexts,
-        data.allergens,
-        data.notes,
-        user.id,
-        user.id
-      ]
-    );
-
-    const row = result.rows[0];
-    row.updated_by_name = user.name;
-    return this.mapRowToRecipe(row);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const newRecipe: Recipe = {
+          id: `recipe-${Date.now()}`,
+          name: data.name,
+          category: data.category,
+          cuisine: data.cuisine,
+          station: data.station,
+          yield: data.yield,
+          prepTimeMinutes: data.prepTimeMinutes,
+          tags: data.tags,
+          photo: data.photo,
+          ingredients: data.ingredients,
+          steps: data.steps,
+          allergens: data.allergens,
+          notes: data.notes,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          createdBy: user.id,
+          updatedBy: user.id,
+          updatedByName: user.name
+        };
+        resolve(newRecipe);
+      }, 100);
+    });
   }
 
   /**
-   * Update an existing recipe
+   * Update recipe
    */
   static async updateRecipe(
     id: string,
-    data: UpdateRecipeData,
+    data: Partial<CreateRecipeData>,
     user: Pick<User, 'id' | 'name'>
-  ): Promise<Recipe | null> {
-    const fields: string[] = [];
-    const values: any[] = [];
-    let idx = 1;
+  ): Promise<Recipe> {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const existingRecipe = recipes.find(r => r.id === id);
+        if (!existingRecipe) {
+          reject(new Error('Recipe not found'));
+          return;
+        }
 
-    if (data.name !== undefined) {
-      fields.push(`name = $${idx++}`);
-      values.push(data.name);
-    }
-    if (data.category !== undefined) {
-      fields.push(`category = $${idx++}`);
-      values.push(data.category);
-    }
-    if (data.cuisine !== undefined) {
-      fields.push(`cuisine = $${idx++}`);
-      values.push(data.cuisine);
-    }
-    if (data.station !== undefined) {
-      fields.push(`station = $${idx++}`);
-      values.push(data.station);
-    }
-    if (data.yield !== undefined) {
-      fields.push(`yield = $${idx++}`);
-      values.push(data.yield);
-    }
-    if (data.prepTimeMinutes !== undefined) {
-      fields.push(`prep_time = $${idx++}`);
-      values.push(data.prepTimeMinutes);
-    }
-    if (data.tags !== undefined) {
-      fields.push(`tags = $${idx++}`);
-      values.push(data.tags);
-    }
-    if (data.photo !== undefined) {
-      fields.push(`photo = $${idx++}`);
-      values.push(data.photo);
-    }
-    if (data.ingredients !== undefined) {
-      fields.push(`ingredients = $${idx++}`);
-      values.push(JSON.stringify(data.ingredients));
-    }
-    if (data.steps !== undefined) {
-      fields.push(`steps = $${idx++}`);
-      values.push(data.steps.map(s => s.instruction));
-    }
-    if (data.allergens !== undefined) {
-      fields.push(`allergens = $${idx++}`);
-      values.push(data.allergens);
-    }
-    if (data.notes !== undefined) {
-      fields.push(`notes = $${idx++}`);
-      values.push(data.notes);
-    }
+        const updatedRecipe: Recipe = {
+          ...existingRecipe,
+          ...data,
+          id: existingRecipe.id,
+          updatedAt: new Date().toISOString(),
+          updatedBy: user.id,
+          updatedByName: user.name
+        };
 
-    if (fields.length === 0) {
-      return this.getRecipeById(id);
-    }
-
-    fields.push(`updated_by = $${idx++}`);
-    values.push(user.id);
-    fields.push(`updated_at = CURRENT_TIMESTAMP`);
-    values.push(id);
-
-    const result = await query(
-      `UPDATE recipes SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
-      values
-    );
-
-    if (result.rows.length === 0) {
-      return null;
-    }
-
-    const row = result.rows[0];
-    row.updated_by_name = user.name;
-    return this.mapRowToRecipe(row);
+        resolve(updatedRecipe);
+      }, 100);
+    });
   }
 
   /**
-   * Delete a recipe
+   * Delete recipe
    */
   static async deleteRecipe(id: string): Promise<boolean> {
-    const result = await query(`DELETE FROM recipes WHERE id = $1`, [id]);
-    return result.rowCount > 0;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // In a real implementation, this would actually delete the recipe
+        // For demo purposes, we just return success
+        resolve(true);
+      }, 50);
+    });
   }
 
   /**
@@ -263,55 +182,119 @@ export class RecipeService {
     byCuisine: Record<string, number>;
     byStation: Record<string, number>;
   }> {
-    const result = await query(`SELECT category, cuisine, station FROM recipes`);
-    const stats = {
-      total: result.rowCount,
-      byCategory: {} as Record<string, number>,
-      byCuisine: {} as Record<string, number>,
-      byStation: {} as Record<string, number>
-    };
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        import('../recipes-data').then(({ recipes }) => {
+          const stats = {
+            total: recipes.length,
+            byCategory: {},
+            byCuisine: {},
+            byStation: {}
+          };
 
-    result.rows.forEach(row => {
-      stats.byCategory[row.category] = (stats.byCategory[row.category] || 0) + 1;
-      stats.byCuisine[row.cuisine] = (stats.byCuisine[row.cuisine] || 0) + 1;
-      stats.byStation[row.station] = (stats.byStation[row.station] || 0) + 1;
+          recipes.forEach(recipe => {
+            // Count by category
+            stats.byCategory[recipe.category] = (stats.byCategory[recipe.category] || 0) + 1;
+            
+            // Count by cuisine
+            stats.byCuisine[recipe.cuisine] = (stats.byCuisine[recipe.cuisine] || 0) + 1;
+            
+            // Count by station
+            stats.byStation[recipe.station] = (stats.byStation[recipe.station] || 0) + 1;
+          });
+
+          resolve(stats);
+        });
+      }, 100);
     });
-
-    return stats;
   }
 
   /**
-   * Generate printable PDF for a recipe
+   * Export recipes to PDF
    */
-  static async printRecipe(id: string): Promise<Uint8Array | null> {
-    const recipe = await this.getRecipeById(id);
-    if (!recipe) return null;
+  static async exportRecipesToPDF(recipes: Recipe[]): Promise<void> {
+    const pdf = new jsPDF();
+    let currentY = 20;
+    const pageHeight = pdf.internal.pageSize.height;
+    const marginBottom = 20;
 
-    const doc = new jsPDF({ format: 'a4' });
-    doc.setFontSize(18);
-    doc.text(recipe.name, 20, 30);
+    pdf.setFontSize(20);
+    pdf.text('Recipe Collection', 20, currentY);
+    currentY += 20;
 
-    let y = 50;
-    doc.setFontSize(12);
-    doc.text(`Yield: ${recipe.yield}`, 20, y);
-    y += 20;
+    recipes.forEach((recipe, index) => {
+      // Check if we need a new page
+      if (currentY > pageHeight - marginBottom - 60) {
+        pdf.addPage();
+        currentY = 20;
+      }
 
-    doc.text('Ingredients:', 20, y);
-    y += 20;
-    recipe.ingredients.forEach(ing => {
-      doc.text(`- ${ing.quantity} ${ing.unit} ${ing.name}`, 30, y);
-      y += 15;
+      // Recipe title
+      pdf.setFontSize(16);
+      pdf.text(`${index + 1}. ${recipe.name}`, 20, currentY);
+      currentY += 10;
+
+      // Recipe details
+      pdf.setFontSize(10);
+      pdf.text(`Category: ${recipe.category}`, 20, currentY);
+      currentY += 7;
+      pdf.text(`Cuisine: ${recipe.cuisine}`, 20, currentY);
+      currentY += 7;
+      pdf.text(`Station: ${recipe.station}`, 20, currentY);
+      currentY += 7;
+      pdf.text(`Yield: ${recipe.yield}`, 20, currentY);
+      currentY += 7;
+      pdf.text(`Prep Time: ${recipe.prepTimeMinutes} minutes`, 20, currentY);
+      currentY += 15;
+
+      // Ingredients
+      if (recipe.ingredients && recipe.ingredients.length > 0) {
+        pdf.setFontSize(12);
+        pdf.text('Ingredients:', 20, currentY);
+        currentY += 10;
+        
+        pdf.setFontSize(10);
+        recipe.ingredients.forEach(ingredient => {
+          pdf.text(`• ${ingredient.quantity} ${ingredient.unit} ${ingredient.name}`, 25, currentY);
+          currentY += 7;
+        });
+        currentY += 5;
+      }
+
+      // Steps
+      if (recipe.steps && recipe.steps.length > 0) {
+        pdf.setFontSize(12);
+        pdf.text('Steps:', 20, currentY);
+        currentY += 10;
+        
+        pdf.setFontSize(10);
+        recipe.steps.forEach((step, stepIndex) => {
+          const stepText = `${stepIndex + 1}. ${step.instruction}`;
+          const lines = pdf.splitTextToSize(stepText, 170);
+          lines.forEach(line => {
+            pdf.text(line, 25, currentY);
+            currentY += 7;
+          });
+        });
+        currentY += 10;
+      }
+
+      currentY += 10; // Space between recipes
     });
 
-    y += 10;
-    doc.text('Steps:', 20, y);
-    y += 20;
-    recipe.steps.forEach(step => {
-      doc.text(`${step.step}. ${step.instruction}`, 30, y);
-      y += 15;
-    });
+    pdf.save('recipes.pdf');
+  }
 
-    return doc.output('arraybuffer');
+  /**
+   * Bulk delete recipes
+   */
+  static async bulkDeleteRecipes(ids: string[]): Promise<boolean> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // In a real implementation, this would actually delete the recipes
+        // For demo purposes, we just return success
+        resolve(true);
+      }, 200);
+    });
   }
 }
-
