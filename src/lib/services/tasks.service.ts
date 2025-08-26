@@ -23,10 +23,12 @@ export class TasksService {
         repeat_schedule as "repeat",
         overdue_days as "overdueDays",
         rejection_reason as "rejectionReason",
+        tags,
+        attachments,
         created_at as "createdAt",
         completed_at as "completedAt",
         approved_at as "approvedAt"
-      FROM tasks 
+      FROM tasks
       ORDER BY created_at DESC
     `);
     
@@ -54,10 +56,12 @@ export class TasksService {
         repeat_schedule as "repeat",
         overdue_days as "overdueDays",
         rejection_reason as "rejectionReason",
+        tags,
+        attachments,
         created_at as "createdAt",
         completed_at as "completedAt",
         approved_at as "approvedAt"
-      FROM tasks 
+      FROM tasks
       WHERE id = $1
     `, [id]);
 
@@ -69,10 +73,11 @@ export class TasksService {
       INSERT INTO tasks (
         title, description, station, status, due_date, due_time,
         base_points, final_points, multiplier, adjustment,
-        assigner_id, assignee_id, proof_type, proof_data, repeat_schedule
+        assigner_id, assignee_id, proof_type, proof_data, repeat_schedule,
+        tags, attachments
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-      RETURNING 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+      RETURNING
         id,
         title,
         description,
@@ -91,6 +96,8 @@ export class TasksService {
         repeat_schedule as "repeat",
         overdue_days as "overdueDays",
         rejection_reason as "rejectionReason",
+        tags,
+        attachments,
         created_at as "createdAt",
         completed_at as "completedAt",
         approved_at as "approvedAt"
@@ -109,7 +116,9 @@ export class TasksService {
       taskData.assigneeId,
       taskData.proofType || 'none',
       JSON.stringify(taskData.proofData),
-      taskData.repeat
+      taskData.repeat,
+      taskData.tags || [],
+      taskData.attachments || []
     ]);
 
     return this.mapRowToTask(result.rows[0]);
@@ -164,6 +173,14 @@ export class TasksService {
       fields.push(`assignee_id = $${paramCount++}`);
       values.push(taskData.assigneeId);
     }
+    if (taskData.tags !== undefined) {
+      fields.push(`tags = $${paramCount++}`);
+      values.push(taskData.tags);
+    }
+    if (taskData.attachments !== undefined) {
+      fields.push(`attachments = $${paramCount++}`);
+      values.push(taskData.attachments);
+    }
     if (taskData.proofData !== undefined) {
       fields.push(`proof_data = $${paramCount++}`);
       values.push(JSON.stringify(taskData.proofData));
@@ -211,6 +228,8 @@ export class TasksService {
         repeat_schedule as "repeat",
         overdue_days as "overdueDays",
         rejection_reason as "rejectionReason",
+        tags,
+        attachments,
         created_at as "createdAt",
         completed_at as "completedAt",
         approved_at as "approvedAt"
@@ -245,10 +264,12 @@ export class TasksService {
         repeat_schedule as "repeat",
         overdue_days as "overdueDays",
         rejection_reason as "rejectionReason",
+        tags,
+        attachments,
         created_at as "createdAt",
         completed_at as "completedAt",
         approved_at as "approvedAt"
-      FROM tasks 
+      FROM tasks
       WHERE status = $1
       ORDER BY due_date ASC, due_time ASC
     `, [status]);
@@ -277,10 +298,12 @@ export class TasksService {
         repeat_schedule as "repeat",
         overdue_days as "overdueDays",
         rejection_reason as "rejectionReason",
+        tags,
+        attachments,
         created_at as "createdAt",
         completed_at as "completedAt",
         approved_at as "approvedAt"
-      FROM tasks 
+      FROM tasks
       WHERE assignee_id = $1
       ORDER BY created_at DESC
     `, [assigneeId]);
@@ -309,10 +332,12 @@ export class TasksService {
         repeat_schedule as "repeat",
         overdue_days as "overdueDays",
         rejection_reason as "rejectionReason",
+        tags,
+        attachments,
         created_at as "createdAt",
         completed_at as "completedAt",
         approved_at as "approvedAt"
-      FROM tasks 
+      FROM tasks
       WHERE station = $1
       ORDER BY due_date ASC, due_time ASC
     `, [station]);
@@ -340,6 +365,8 @@ export class TasksService {
       repeat: row.repeat,
       overdueDays: parseInt(row.overdueDays) || 0,
       rejectionReason: row.rejectionReason,
+      tags: row.tags || [],
+      attachments: row.attachments || [],
       createdAt: row.createdAt,
       completedAt: row.completedAt,
       approvedAt: row.approvedAt
