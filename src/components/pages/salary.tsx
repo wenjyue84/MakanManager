@@ -78,7 +78,7 @@ import {
   type OvertimeRecord,
   type SalaryAdvance
 } from '../../lib/salary-data';
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 export function SalaryPage() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -167,7 +167,7 @@ export function SalaryPage() {
   }, [canApprove, otRecords, advanceRecords]);
 
   const getUserById = (id: string) => {
-    return staffMembers.find(member => member.id === member.id);
+    return staffMembers.find(member => member.id === id);
   };
 
   const handleAddOT = () => {
@@ -1042,5 +1042,3 @@ export function SalaryPage() {
   );
 }
 
-// Fix missing import
-import { Calculator } from 'lucide-react';

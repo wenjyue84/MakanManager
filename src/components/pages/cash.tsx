@@ -82,6 +82,11 @@ import {
   type CashDenomination
 } from '../../lib/cash-data';
 import { toast } from "sonner@2.0.3";
+import { 
+  exportCashReconciliationsToExcel, 
+  exportCashReconciliationsToPDF,
+  exportFilteredCashData 
+} from '../../lib/cash-export';
 
 export function CashPage() {
   const [activeTab, setActiveTab] = useState('reconciliation');
@@ -197,11 +202,21 @@ export function CashPage() {
   };
 
   const handleExportPDF = () => {
-    toast.info('PDF export functionality would be implemented here');
+    const result = exportCashReconciliationsToPDF(cashReconciliations);
+    if (result.success) {
+      toast.success(`PDF exported successfully: ${result.filename}`);
+    } else {
+      toast.error(`Export failed: ${result.error}`);
+    }
   };
 
   const handleExportExcel = () => {
-    toast.info('Excel export functionality would be implemented here');
+    const result = exportCashReconciliationsToExcel(cashReconciliations);
+    if (result.success) {
+      toast.success(`Excel file exported successfully: ${result.filename}`);
+    } else {
+      toast.error(`Export failed: ${result.error}`);
+    }
   };
 
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -688,6 +703,96 @@ export function CashPage() {
               </Card>
             </div>
 
+            {/* Export Options */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="size-5" />
+                  Export Options
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <Label>From Date</Label>
+                    <Input
+                      type="date"
+                      defaultValue={new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                      className="mt-1"
+                      id="export-from-date"
+                    />
+                  </div>
+                  <div>
+                    <Label>To Date</Label>
+                    <Input
+                      type="date"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                      className="mt-1"
+                      id="export-to-date"
+                    />
+                  </div>
+                  <div>
+                    <Label>Filter by Status</Label>
+                    <Select defaultValue="all">
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="tally">Tally</SelectItem>
+                        <SelectItem value="shortage">Shortage</SelectItem>
+                        <SelectItem value="overage">Overage</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <Button 
+                      onClick={() => {
+                        const fromDate = (document.getElementById('export-from-date') as HTMLInputElement)?.value;
+                        const toDate = (document.getElementById('export-to-date') as HTMLInputElement)?.value;
+                        const result = exportFilteredCashData(
+                          cashReconciliations, 
+                          { dateFrom: fromDate, dateTo: toDate },
+                          'pdf'
+                        );
+                        if (result.success) {
+                          toast.success(`Filtered PDF exported: ${result.filename}`);
+                        } else {
+                          toast.error(`Export failed: ${result.error}`);
+                        }
+                      }}
+                      variant="outline" 
+                      size="sm"
+                    >
+                      <Download className="size-4 mr-1" />
+                      PDF
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        const fromDate = (document.getElementById('export-from-date') as HTMLInputElement)?.value;
+                        const toDate = (document.getElementById('export-to-date') as HTMLInputElement)?.value;
+                        const result = exportFilteredCashData(
+                          cashReconciliations, 
+                          { dateFrom: fromDate, dateTo: toDate },
+                          'excel'
+                        );
+                        if (result.success) {
+                          toast.success(`Filtered Excel exported: ${result.filename}`);
+                        } else {
+                          toast.error(`Export failed: ${result.error}`);
+                        }
+                      }}
+                      variant="outline" 
+                      size="sm"
+                    >
+                      <Download className="size-4 mr-1" />
+                      Excel
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Recent Records Table */}
             <Card>
               <CardHeader>
@@ -726,9 +831,31 @@ export function CashPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="sm" onClick={() => handleViewRecord(record)}>
-                              <Eye className="size-4" />
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="sm" onClick={() => handleViewRecord(record)}>
+                                <Eye className="size-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => {
+                                  const result = exportFilteredCashData(
+                                    [record], 
+                                    {},
+                                    'pdf',
+                                    `reconciliation-${record.reconciliationNumber}.pdf`
+                                  );
+                                  if (result.success) {
+                                    toast.success(`Record exported: ${result.filename}`);
+                                  } else {
+                                    toast.error(`Export failed: ${result.error}`);
+                                  }
+                                }}
+                                title="Export this record as PDF"
+                              >
+                                <Download className="size-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

@@ -8,7 +8,8 @@
       "Read(/C:\\Users\\Jyue\\AppData\\Roaming\\Claude/**)",
       "Read(/C:\\Users\\Jyue\\AppData\\Roaming\\Claude/**)",
       "Bash(setx:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
