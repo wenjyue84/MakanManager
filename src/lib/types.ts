@@ -75,6 +75,20 @@ export interface Recipe {
   station: Station;
 }
 
+export interface StaffMeal {
+  id: string;
+  date: string;
+  time: string;
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'break';
+  dishName: string;
+  cookedBy: string;
+  eaters: string[];
+  approximateCost: number;
+  photo?: string;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface Supplier {
   id: string;
   name: string;
@@ -125,4 +139,37 @@ export interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => void;
   clearError: () => void;
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  category: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserSkill {
+  id: string;
+  userId: string;
+  skillId: string;
+  level: 'basic' | 'proficient' | 'expert';
+  verified: boolean;
+  verifiedBy?: string;
+  verifiedDate?: string;
+  requestedVerification: boolean;
+  isExclusive?: boolean;
+  notes?: string;
+  pointsAwarded?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PointEntry {
+  id: string;
+  userId: string;
+  points: number;
+  reason?: string;
+  createdAt: string;
 }

@@ -53,7 +53,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
-import { currentUser } from '../../lib/data';
+import { useCurrentUserWithFallback } from '../../lib/hooks/use-current-user';
 import { staffMembers } from '../../lib/staff-data';
 import { 
   overtimeRecords,
@@ -81,6 +81,7 @@ import {
 import { toast } from "sonner";
 
 export function SalaryPage() {
+  const { user: currentUser } = useCurrentUserWithFallback();
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedStaff, setSelectedStaff] = useState<string>(currentUser.id);
   const [dateRange, setDateRange] = useState({
