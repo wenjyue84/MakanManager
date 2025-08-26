@@ -1,45 +1,92 @@
 import { LoginCredentials, User } from '../types';
-import { users } from '../data';
+
+const ACCESS_KEY = 'makanmanager_access_token';
+const REFRESH_KEY = 'makanmanager_refresh_token';
 
 export class AuthService {
-  static async login(credentials: LoginCredentials): Promise<{ success: boolean; user?: User; error?: string }> {
+  static async login(
+    credentials: LoginCredentials
+  ): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
 
-      // Find user by email and password
-      const user = users.find(
-        u => u.email.toLowerCase() === credentials.email.toLowerCase() && 
-             u.password === credentials.password
-      );
-
-      if (user) {
-        return { success: true, user };
-      } else {
-        return { success: false, error: 'Invalid email or password' };
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        return { success: false, error: data.message || 'Invalid email or password' };
       }
+
+      const data = await response.json();
+      if (data.accessToken) {
+        localStorage.setItem(ACCESS_KEY, data.accessToken);
+      }
+      if (data.refreshToken) {
+        localStorage.setItem(REFRESH_KEY, data.refreshToken);
+      }
+
+      return { success: true, user: data.user };
     } catch (error) {
       return { success: false, error: 'An error occurred during login' };
     }
   }
 
-  static async validateToken(token: string): Promise<{ valid: boolean; user?: User }> {
-    try {
-      // In a real app, this would validate a JWT token
-      // For now, we'll just check if the user exists in localStorage
-      const storedUser = localStorage.getItem('makanmanager_user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        return { valid: true, user };
-      }
+  static async validateToken(): Promise<{ valid: boolean; user?: User }> {
+    const refreshToken = localStorage.getItem(REFRESH_KEY);
+    if (!refreshToken) {
       return { valid: false };
+    }
+
+    try {
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) {
+        return { valid: false };
+      }
+
+      const data = await response.json();
+      if (data.accessToken) {
+        localStorage.setItem(ACCESS_KEY, data.accessToken);
+      }
+      if (data.user) {
+        AuthService.storeUser(data.user);
+        return { valid: true, user: data.user };
+      }
+
+      return { valid: true };
     } catch (error) {
       return { valid: false };
     }
   }
 
-  static logout(): void {
-    localStorage.removeItem('makanmanager_user');
+  static async logout(): Promise<void> {
+    const refreshToken = localStorage.getItem(REFRESH_KEY);
+
+    try {
+      if (refreshToken) {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+      }
+    } finally {
+      localStorage.removeItem('makanmanager_user');
+      localStorage.removeItem(ACCESS_KEY);
+      localStorage.removeItem(REFRESH_KEY);
+    }
   }
 
   static getStoredUser(): User | null {
