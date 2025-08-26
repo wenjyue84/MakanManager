@@ -128,6 +128,36 @@ app.delete('/api/tasks/:id', async (req, res) => {
   }
 });
 
+app.get('/api/tasks/:taskId/reminders', async (req, res) => {
+  try {
+    const result = await query(
+      'SELECT id, task_id as "taskId", remind_at as "remindAt", message, created_at as "createdAt" FROM task_reminders WHERE task_id = $1 ORDER BY remind_at ASC',
+      [req.params.taskId]
+    );
+    res.json(result.rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/tasks/:taskId/reminders', async (req, res) => {
+  try {
+    const { remindAt, message } = req.body;
+    const remindDate = new Date(remindAt);
+    const hour = remindDate.getHours();
+    if (hour >= 22 || hour < 8) {
+      return res.status(400).json({ error: 'Reminders cannot be scheduled during quiet hours' });
+    }
+    const result = await query(
+      'INSERT INTO task_reminders (task_id, remind_at, message) VALUES ($1, $2, $3) RETURNING id, task_id as "taskId", remind_at as "remindAt", message, created_at as "createdAt"',
+      [req.params.taskId, remindAt, message]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/users', async (req, res) => {
   try {
     const { role } = req.query;

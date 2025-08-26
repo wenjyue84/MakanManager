@@ -63,6 +63,15 @@ CREATE TABLE tasks (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Task reminders table
+CREATE TABLE task_reminders (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    remind_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Task comments table
 CREATE TABLE task_comments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

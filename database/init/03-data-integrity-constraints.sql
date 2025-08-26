@@ -80,6 +80,16 @@ ALTER TABLE tasks
       END
     );
 
+-- ==================== TASK REMINDERS CONSTRAINTS ====================
+
+ALTER TABLE task_reminders
+  ADD CONSTRAINT chk_task_reminders_message_not_empty CHECK (message IS NULL OR TRIM(message) != ''),
+  ADD CONSTRAINT chk_task_reminders_future CHECK (remind_at > CURRENT_TIMESTAMP),
+  ADD CONSTRAINT chk_task_reminders_quiet_hours CHECK (
+    EXTRACT(HOUR FROM remind_at) NOT BETWEEN 22 AND 23 AND
+    EXTRACT(HOUR FROM remind_at) NOT BETWEEN 0 AND 7
+  );
+
 -- ==================== DISCIPLINARY ACTIONS CONSTRAINTS ====================
 
 ALTER TABLE disciplinary_actions
