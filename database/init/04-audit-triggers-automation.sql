@@ -142,7 +142,7 @@ DO $$
 DECLARE
     table_record RECORD;
     audit_tables TEXT[] := ARRAY[
-        'users', 'tasks', 'disciplinary_actions', 'recipes', 'staff_meals',
+        'users', 'tasks', 'disciplinary_actions', 'disciplinary_types', 'recipes', 'staff_meals',
         'cash_reconciliations', 'online_orders', 'purchases', 'suppliers',
         'disposals', 'issues', 'notifications', 'user_skills', 'salary_records'
     ];

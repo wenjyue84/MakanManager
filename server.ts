@@ -3,9 +3,11 @@ import { query } from './src/lib/database';
 import { Task, User } from './src/lib/types';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import pointsService from './backend/src/services/points';
 
 const app = express();
 app.use(express.json());
+const MANAGEMENT_DAILY_BUDGET = 500;
 
 function mapTask(row: any): Task {
   return {
@@ -211,6 +213,70 @@ app.patch('/api/users/:id/points', async (req, res) => {
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
     res.json(mapUser(result.rows[0]));
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/disciplinary-types', async (_req, res) => {
+  try {
+    const result = await query(
+      'SELECT id, name, default_points as "defaultPoints" FROM disciplinary_types ORDER BY name'
+    );
+    res.json(result.rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/disciplinary-types', async (req, res) => {
+  try {
+    const { name, defaultPoints } = req.body;
+    const result = await query(
+      'INSERT INTO disciplinary_types (name, default_points) VALUES ($1,$2) RETURNING id, name, default_points as "defaultPoints"',
+      [name, defaultPoints]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/disciplinary-actions', async (req, res) => {
+  try {
+    const { targetUserId, typeId, reason, createdById } = req.body;
+    const typeRes = await query('SELECT name, default_points FROM disciplinary_types WHERE id = $1', [typeId]);
+    if (typeRes.rows.length === 0) return res.status(404).json({ error: 'Type not found' });
+    const type = typeRes.rows[0];
+    const actionRes = await query(
+      `INSERT INTO disciplinary_actions (target_user_id, type_id, type, points, reason, created_by_id)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING id, target_user_id as "targetUserId", type_id as "typeId", type, points, reason, created_by_id as "createdById", created_at as "createdAt"`,
+      [targetUserId, typeId, type.name, type.default_points, reason, createdById]
+    );
+    const action = actionRes.rows[0];
+    await pointsService.addEntry(
+      {
+        managerId: createdById,
+        targetUserId,
+        sourceType: 'discipline',
+        sourceId: action.id,
+        points: action.points,
+      },
+      MANAGEMENT_DAILY_BUDGET
+    );
+    res.status(201).json(action);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/disciplinary-actions', async (_req, res) => {
+  try {
+    const result = await query(
+      `SELECT id, target_user_id as "targetUserId", type_id as "typeId", type, points, reason, created_by_id as "createdById", created_at as "createdAt" FROM disciplinary_actions ORDER BY created_at DESC`
+    );
+    res.json(result.rows);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

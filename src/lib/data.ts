@@ -1,4 +1,4 @@
-import { Task, DisciplinaryAction, Recipe, AppSettings } from './types';
+import { Task, DisciplinaryAction, DisciplinaryType, Recipe, AppSettings } from './types';
 
 // Using any[] to allow legacy user seed data that doesn't include new mandatory fields
 export const users: any[] = [
@@ -454,10 +454,17 @@ export const tasks: Task[] = [
   }
 ];
 
+export const disciplinaryTypes: DisciplinaryType[] = [
+  { id: '1', name: 'Sudden Absence', defaultPoints: -200 },
+  { id: '2', name: 'Late Arrival (>15m)', defaultPoints: -30 },
+  { id: '3', name: 'Phone Use on Duty', defaultPoints: -20 }
+];
+
 export const disciplinaryActions: DisciplinaryAction[] = [
   {
     id: '1',
     targetUserId: '6',
+    typeId: '1',
     type: 'Sudden Absence',
     points: -200,
     reason: 'No show on 18 Aug without prior notice',
@@ -467,6 +474,7 @@ export const disciplinaryActions: DisciplinaryAction[] = [
   {
     id: '2',
     targetUserId: '8',
+    typeId: '2',
     type: 'Late Arrival (>15m)',
     points: -30,
     reason: 'Arrived 25 mins late for morning shift',
@@ -476,6 +484,7 @@ export const disciplinaryActions: DisciplinaryAction[] = [
   {
     id: '3',
     targetUserId: '7',
+    typeId: '3',
     type: 'Phone Use on Duty',
     points: -20,
     reason: 'Using personal phone during service hours',
