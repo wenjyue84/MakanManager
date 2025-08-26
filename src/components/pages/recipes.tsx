@@ -117,6 +117,7 @@ export function Recipes({}: RecipesProps) {
   const [selectedRecipes, setSelectedRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [recipesList, setRecipesList] = useState<Recipe[]>([]);
+  const { user: currentUser, isLoading: isUserLoading } = useCurrentUser();
 
   const { user: currentUser, isLoading: userLoading } = useCurrentUser();
 
@@ -142,7 +143,9 @@ export function Recipes({}: RecipesProps) {
     fetchRecipes();
   }, [refreshTrigger]);
 
-  if (userLoading || !currentUser) {
+
+  if (isUserLoading || !currentUser) {
+
     return <div>Loading...</div>;
   }
 
@@ -240,7 +243,7 @@ export function Recipes({}: RecipesProps) {
   const handleCreateRecipe = async (recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>) => {
     try {
       setIsLoading(true);
-      const newRecipe = await RecipeService.createRecipe(recipeData);
+      const newRecipe = await RecipeService.createRecipe(recipeData, currentUser);
       toast.success(`Recipe "${newRecipe.name}" created successfully`);
       // Refresh the recipes list
       setRefreshTrigger(prev => prev + 1);
@@ -255,7 +258,7 @@ export function Recipes({}: RecipesProps) {
   const handleUpdateRecipe = async (id: string, recipeData: Omit<Recipe, 'id' | 'lastUpdatedBy' | 'lastUpdatedDate'>) => {
     try {
       setIsLoading(true);
-      const updatedRecipe = await RecipeService.updateRecipe(id, recipeData);
+      const updatedRecipe = await RecipeService.updateRecipe(id, recipeData, currentUser);
       if (updatedRecipe) {
         toast.success(`Recipe "${updatedRecipe.name}" updated successfully`);
         // Update the selected recipe if it's the one being edited
