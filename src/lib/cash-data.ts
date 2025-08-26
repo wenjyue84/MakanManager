@@ -397,8 +397,11 @@ export const formatCurrency = (amount: number): string => {
   return `RM${amount.toFixed(2)}`;
 };
 
-export const formatDateTime = (dateString: string): string => {
-  return new Date(dateString).toLocaleString('en-US', {
+export const formatDateTime = (
+  dateString: string,
+  locale: string = typeof navigator !== 'undefined' ? navigator.language : 'en-US'
+): string => {
+  return new Date(dateString).toLocaleString(locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -407,8 +410,11 @@ export const formatDateTime = (dateString: string): string => {
   });
 };
 
-export const formatTime = (dateString: string): string => {
-  return new Date(dateString).toLocaleTimeString('en-US', {
+export const formatTime = (
+  dateString: string,
+  locale: string = typeof navigator !== 'undefined' ? navigator.language : 'en-US'
+): string => {
+  return new Date(dateString).toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit'
   });

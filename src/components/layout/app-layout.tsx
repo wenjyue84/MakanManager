@@ -172,7 +172,8 @@ export function AppLayout({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
-                  <Globe className="size-4" />
+                  <Globe className="size-4 mr-1" />
+                  <span className="uppercase">{currentLanguage}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">

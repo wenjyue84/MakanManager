@@ -34,6 +34,27 @@ export const en = {
   next: "Next",
   previous: "Previous",
 
+  // Auth
+  appName: "Makan Manager",
+  appTagline: "Restaurant Staff Management System",
+  signInToContinue: "Sign in to your account to continue",
+  emailAddress: "Email Address",
+  enterYourEmail: "Enter your email",
+  password: "Password",
+  enterYourPassword: "Enter your password",
+  signIn: "Sign In",
+  signingIn: "Signing In...",
+  tryDemoAccounts: "Try demo accounts:",
+  owner: "Owner",
+  manager: "Manager",
+  kitchen: "Kitchen",
+  pleaseFillAllFields: "Please fill in all fields",
+  loginSuccessful: "Login successful! Welcome back.",
+  loginFailed: "Login failed. Please check your credentials.",
+  demoLoginSuccessful: "Demo login successful!",
+  demoLoginFailed: "Demo login failed.",
+  unexpectedError: "An unexpected error occurred.",
+
   // Navigation Groups
   operations: "Operations",
   staffManagement: "Staff Management",
@@ -69,6 +90,13 @@ export const en = {
   createTask: "Create Task",
   viewAllTasks: "View All Tasks",
   viewAllOrders: "View All Orders",
+  newOrder: "New Order",
+  cashCount: "Cash Count",
+  reportIssue: "Report Issue",
+  clockInOut: "Clock In/Out",
+  requestMeal: "Request Meal",
+  takeBreak: "Take Break",
+  getHelp: "Get Help",
 
   // Tasks
   taskTitle: "Task Title",

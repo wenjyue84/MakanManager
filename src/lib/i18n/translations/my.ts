@@ -34,6 +34,27 @@ export const my = {
   next: "ရှေ့သို့",
   previous: "နောက်သို့",
 
+  // Auth
+  appName: "Makan Manager",
+  appTagline: "စားသောက်ဆိုင်ဝန်ထမ်းစီမံခန့်ခွဲမှုစနစ်",
+  signInToContinue: "သင့်အကောင့်သို့ဝင်ရောက်ပြီး ဆက်လက်အသုံးပြုပါ",
+  emailAddress: "အီးမေးလ်လိပ်စာ",
+  enterYourEmail: "သင်၏အီးမေးလ်ထည့်ပါ",
+  password: "စကားဝှက်",
+  enterYourPassword: "သင့်စကားဝှက်ထည့်ပါ",
+  signIn: "ဝင်ရောက်မည်",
+  signingIn: "ဝင်ရောက်နေသည်...",
+  tryDemoAccounts: "ဒေမိုအကောင့်များစမ်းပါ:",
+  owner: "ပိုင်ရှင်",
+  manager: "မန်နေဂျာ",
+  kitchen: "မီးဖိုချောင်",
+  pleaseFillAllFields: "ကျေးဇူးပြု၍ အချက်အလက်အားလုံးဖြည့်ပါ",
+  loginSuccessful: "ဝင်ရောက်မှုအောင်မြင်ပါသည်! ကြိုဆိုပါသည်။",
+  loginFailed: "ဝင်ရောက်မှုမအောင်မြင်ပါ။ အချက်အလက်များစစ်ဆေးပါ။",
+  demoLoginSuccessful: "ဒေမိုဝင်ရောက်မှုအောင်မြင်ပါသည်!",
+  demoLoginFailed: "ဒေမိုဝင်ရောက်မှုမအောင်မြင်ပါ။",
+  unexpectedError: "မမျှော်လင့်ထားသော အမှားအယွင်း ဖြစ်ပေါ်ခဲ့သည်။",
+
   // Dashboard
   welcomeBack: "ပြန်လည်ကြိုဆိုပါတယ်",
   todayTasks: "ယနေ့၏လုပ်ငန်းတာဝန်များ",
@@ -42,6 +63,13 @@ export const my = {
   createTask: "လုပ်ငန်းတာဝန်ဖန်တီးရန်",
   viewAllTasks: "လုပ်ငန်းတာဝန်အားလုံးကြည့်ရန်",
   viewAllOrders: "အော်ဒါအားလုံးကြည့်ရန်",
+  newOrder: "အော်ဒါအသစ်",
+  cashCount: "ငွေစာရင်း",
+  reportIssue: "ပြဿနာတင်ပြရန်",
+  clockInOut: "အလုပ်ဝင်/ထွက်",
+  requestMeal: "အစားအစာ တောင်းခံရန်",
+  takeBreak: "နားရန်",
+  getHelp: "အကူအညီရယူရန်",
 
   // Tasks
   taskTitle: "လုပ်ငန်းတာဝန်၏ခေါင်းစဉ်",

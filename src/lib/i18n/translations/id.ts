@@ -34,6 +34,27 @@ export const id = {
   next: "Selanjutnya",
   previous: "Sebelumnya",
 
+  // Auth
+  appName: "Makan Manager",
+  appTagline: "Sistem Manajemen Staf Restoran",
+  signInToContinue: "Masuk ke akun Anda untuk melanjutkan",
+  emailAddress: "Alamat Email",
+  enterYourEmail: "Masukkan email Anda",
+  password: "Kata Sandi",
+  enterYourPassword: "Masukkan kata sandi Anda",
+  signIn: "Masuk",
+  signingIn: "Sedang Masuk...",
+  tryDemoAccounts: "Coba akun demo:",
+  owner: "Pemilik",
+  manager: "Manajer",
+  kitchen: "Dapur",
+  pleaseFillAllFields: "Silakan isi semua bidang",
+  loginSuccessful: "Berhasil masuk! Selamat datang kembali.",
+  loginFailed: "Gagal masuk. Periksa kredensial Anda.",
+  demoLoginSuccessful: "Login demo berhasil!",
+  demoLoginFailed: "Login demo gagal.",
+  unexpectedError: "Terjadi kesalahan tak terduga.",
+
   // Navigation Groups
   operations: "Operasi",
   staffManagement: "Manajemen Staf",
@@ -69,6 +90,13 @@ export const id = {
   createTask: "Buat Tugas",
   viewAllTasks: "Lihat Semua Tugas",
   viewAllOrders: "Lihat Semua Pesanan",
+  newOrder: "Pesanan Baru",
+  cashCount: "Hitung Kas",
+  reportIssue: "Laporkan Masalah",
+  clockInOut: "Masuk/Keluar",
+  requestMeal: "Minta Makan",
+  takeBreak: "Istirahat",
+  getHelp: "Minta Bantuan",
 
   // Tasks
   taskTitle: "Judul Tugas",

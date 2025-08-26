@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Language, useTranslation } from '../i18n';
+import { Language, useTranslation, languageCodes } from '../i18n';
 
 interface LanguageContextType {
   currentLanguage: Language;
@@ -17,22 +17,21 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children, defaultLanguage = 'en' }: LanguageProviderProps) {
-  const [currentLanguage, setCurrentLanguage] = useState<Language>(defaultLanguage);
-  const { t, languageNames, languageCodes } = useTranslation(currentLanguage);
+  const [currentLanguage, setCurrentLanguage] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('preferredLanguage') as Language;
+      if (saved && (languageCodes as Language[]).includes(saved)) {
+        return saved;
+      }
+    }
+    return defaultLanguage;
+  });
+  const { t, languageNames } = useTranslation(currentLanguage);
 
   const setLanguage = (language: Language) => {
     setCurrentLanguage(language);
-    // Optionally save to localStorage for persistence
     localStorage.setItem('preferredLanguage', language);
   };
-
-  // Load saved language preference on mount
-  React.useEffect(() => {
-    const savedLanguage = localStorage.getItem('preferredLanguage') as Language;
-    if (savedLanguage && languageCodes.includes(savedLanguage)) {
-      setCurrentLanguage(savedLanguage);
-    }
-  }, [languageCodes]);
 
   const value: LanguageContextType = {
     currentLanguage,
