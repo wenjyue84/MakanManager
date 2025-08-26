@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Search, 
   Filter,
@@ -209,14 +210,17 @@ export function OnlineOrdersPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Online Orders</h1>
-              <p className="text-muted-foreground">
-                Manage customer orders from all platforms
-              </p>
-            </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Online Orders</h1>
+            <p className="text-muted-foreground">
+              Manage customer orders from all platforms
+            </p>
           </div>
+          <Button asChild variant="outline">
+            <Link to="/order-form">View Order form as Guest</Link>
+          </Button>
+        </div>
 
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4">
