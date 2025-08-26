@@ -1,11 +1,29 @@
 
-  import { defineConfig } from 'vite';
-  import react from '@vitejs/plugin-react-swc';
-  import path from 'path';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
+import fs from 'fs';
 
-  export default defineConfig({
-    plugins: [react()],
-    resolve: {
+function serveServiceWorker() {
+  return {
+    name: 'serve-sw',
+    apply: 'serve',
+    configureServer(server: any) {
+      server.middlewares.use((req: any, res: any, next: any) => {
+        if (req.url === '/sw.js') {
+          res.setHeader('Content-Type', 'application/javascript');
+          res.end(fs.readFileSync(path.resolve(__dirname, 'public/sw.js')));
+        } else {
+          next();
+        }
+      });
+    },
+  };
+}
+
+export default defineConfig({
+  plugins: [react(), serveServiceWorker()],
+  resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {
         'vaul@1.1.2': 'vaul',
@@ -56,5 +74,5 @@
       port: 3000,
       open: true,
       historyApiFallback: true,
-    },
-  });
+  },
+});
