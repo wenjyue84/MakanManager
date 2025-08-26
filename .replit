@@ -21,7 +21,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx vite --config vite.config.override.mjs"
+args = "npx serve -s build -l 5000"
 waitForPort = 5000
 
 [[ports]]
