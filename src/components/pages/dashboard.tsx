@@ -67,7 +67,7 @@ export function Dashboard({
   onGetHelp
 }: DashboardProps) {
   const { user: currentUser, isLoading } = useCurrentUser();
-  const { t } = useTranslations();
+  const { t, currentLanguage } = useTranslations();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [salesData, setSalesData] = useState({
     today: 2675.50,
@@ -145,11 +145,20 @@ export function Dashboard({
   };
 
   const formatTime = (timeString: string) => {
-    return new Date(`2024-01-01T${timeString}`).toLocaleTimeString('en-US', {
+    return new Date(`2024-01-01T${timeString}`).toLocaleTimeString(currentLanguage, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true
     });
+  };
+
+  const formatRelativeTime = (minutes: number) => {
+    const rtf = new Intl.RelativeTimeFormat(currentLanguage, { numeric: 'auto' });
+    if (minutes < 60) {
+      return rtf.format(-minutes, 'minute');
+    }
+    const hours = Math.floor(minutes / 60);
+    return rtf.format(-hours, 'hour');
   };
 
   const getUserById = (id: string) => users.find(user => user.id === id);
@@ -160,24 +169,24 @@ export function Dashboard({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">
-            Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}, {currentUser.name}!
+            {t(currentTime.getHours() < 12 ? 'goodMorning' : currentTime.getHours() < 17 ? 'goodAfternoon' : 'goodEvening')}, {currentUser.name}!
           </h1>
           <p className="text-muted-foreground">
-            {currentTime.toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            {currentTime.toLocaleDateString(currentLanguage, {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm">
             <RefreshCw className="size-4 mr-2" />
-            Refresh
+            {t('refresh')}
           </Button>
           {notificationCount > 0 && (
-            <Badge variant="destructive">{notificationCount} alerts</Badge>
+            <Badge variant="destructive">{notificationCount} {t('alerts')}</Badge>
           )}
         </div>
       </div>
@@ -187,7 +196,7 @@ export function Dashboard({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="size-5" />
-            Quick Actions
+            {t('quickActions')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -357,7 +366,7 @@ export function Dashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="size-5" />
-              Today's Schedule
+              {t('todaysSchedule')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -379,10 +388,10 @@ export function Dashboard({
                     }`}>
                       {item.title}
                     </p>
-                    <p className="text-xs text-muted-foreground">{item.time}</p>
+                    <p className="text-xs text-muted-foreground">{formatTime(item.time)}</p>
                   </div>
                   <Badge variant={item.status === 'completed' ? 'success' : 'outline'} className="text-xs">
-                    {item.status}
+                    {t(item.status)}
                   </Badge>
                 </div>
               ))}
@@ -395,7 +404,7 @@ export function Dashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="size-5" />
-              Live Updates
+              {t('liveUpdates')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -405,10 +414,10 @@ export function Dashboard({
                   <Package className="size-3 text-green-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">New order received</p>
+                  <p className="text-sm font-medium">{t('newOrderReceived')}</p>
                   <p className="text-xs text-muted-foreground">Order #ORD-048 - RM34.50</p>
                 </div>
-                <span className="text-xs text-muted-foreground">2 min ago</span>
+                <span className="text-xs text-muted-foreground">{formatRelativeTime(2)}</span>
               </div>
 
               <div className="flex items-center gap-3 p-2">
@@ -416,10 +425,10 @@ export function Dashboard({
                   <CheckCircle className="size-3 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Task completed</p>
+                  <p className="text-sm font-medium">{t('taskCompleted')}</p>
                   <p className="text-xs text-muted-foreground">Islam finished cleaning espresso machine</p>
                 </div>
-                <span className="text-xs text-muted-foreground">5 min ago</span>
+                <span className="text-xs text-muted-foreground">{formatRelativeTime(5)}</span>
               </div>
 
               <div className="flex items-center gap-3 p-2">
@@ -427,10 +436,10 @@ export function Dashboard({
                   <AlertTriangle className="size-3 text-orange-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Low stock alert</p>
+                  <p className="text-sm font-medium">{t('lowStockAlert')}</p>
                   <p className="text-xs text-muted-foreground">Arabica coffee beans - 2 days remaining</p>
                 </div>
-                <span className="text-xs text-muted-foreground">15 min ago</span>
+                <span className="text-xs text-muted-foreground">{formatRelativeTime(15)}</span>
               </div>
 
               <div className="flex items-center gap-3 p-2">
@@ -438,10 +447,10 @@ export function Dashboard({
                   <Users className="size-3 text-purple-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Staff check-in</p>
+                  <p className="text-sm font-medium">{t('staffCheckIn')}</p>
                   <p className="text-xs text-muted-foreground">Sherry started morning shift</p>
                 </div>
-                <span className="text-xs text-muted-foreground">1 hour ago</span>
+                <span className="text-xs text-muted-foreground">{formatRelativeTime(60)}</span>
               </div>
             </div>
           </CardContent>
@@ -451,15 +460,15 @@ export function Dashboard({
       {/* My Tasks */}
       <Card>
         <CardHeader>
-          <CardTitle>My Tasks</CardTitle>
+          <CardTitle>{t('myTasks')}</CardTitle>
         </CardHeader>
         <CardContent>
           {myTasks.length === 0 ? (
-            <p className="text-muted-foreground">No active tasks assigned</p>
+            <p className="text-muted-foreground">{t('noActiveTasksAssigned')}</p>
           ) : (
             <div className="space-y-3">
               {myTasks.map((task) => (
-                <div 
+                <div
                   key={task.id} 
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer"
                   onClick={() => onTaskClick(task)}
@@ -472,7 +481,7 @@ export function Dashboard({
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="size-3" />
-                        {new Date(task.dueDate).toLocaleDateString()}
+                        {new Date(task.dueDate).toLocaleDateString(currentLanguage)}
                       </span>
                       <span className="flex items-center gap-1">
                         <Timer className="size-3" />
@@ -497,22 +506,22 @@ export function Dashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="size-5" />
-              Management Actions
+              {t('managementActions')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-3 gap-4">
               <Button onClick={onCreateTask} className="h-20 flex-col gap-2">
                 <Plus className="size-5" />
-                <span>Create Task</span>
+                <span>{t('createTask')}</span>
               </Button>
               <Button onClick={onCreateDiscipline} variant="outline" className="h-20 flex-col gap-2">
                 <AlertTriangle className="size-5" />
-                <span>Disciplinary Action</span>
+                <span>{t('disciplinaryActions')}</span>
               </Button>
               <Button variant="outline" className="h-20 flex-col gap-2">
                 <BarChart3 className="size-5" />
-                <span>View Reports</span>
+                <span>{t('reports')}</span>
               </Button>
             </div>
           </CardContent>
@@ -526,22 +535,22 @@ export function Dashboard({
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <CheckCircle className="size-5" />
-{isStaff ? 'My Tasks' : isManagement ? 'Team Tasks' : 'Active Tasks'}
+                {isStaff ? t('myTasks') : isManagement ? t('teamTasks') : t('activeTasks')}
               </span>
-              <Badge variant="outline">{myTasks.length} active</Badge>
+              <Badge variant="outline">{myTasks.length} {t('active')}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {myTasks.length === 0 ? (
               <div className="text-center py-8">
                 <CheckCircle className="size-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No active tasks assigned</p>
-                <p className="text-sm text-muted-foreground">Check back later for new assignments</p>
+                <p className="text-muted-foreground">{t('noActiveTasksAssigned')}</p>
+                <p className="text-sm text-muted-foreground">{t('checkBackLater')}</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {myTasks.slice(0, 4).map((task) => (
-                  <div 
+                  <div
                     key={task.id} 
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
                     onClick={() => onTaskClick(task)}
@@ -554,7 +563,7 @@ export function Dashboard({
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Calendar className="size-3" />
-                          {new Date(task.dueDate).toLocaleDateString()}
+                          {new Date(task.dueDate).toLocaleDateString(currentLanguage)}
                         </span>
                         <span className="flex items-center gap-1">
                           <Timer className="size-3" />
@@ -573,7 +582,7 @@ export function Dashboard({
                 ))}
                 {myTasks.length > 4 && (
                   <Button variant="ghost" className="w-full">
-                    View all {myTasks.length} tasks
+                    {t('viewAllTasks')}
                   </Button>
                 )}
               </div>
@@ -587,10 +596,10 @@ export function Dashboard({
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Package className="size-5" />
-                {isManagement ? 'Pending Reviews' : 'Available Tasks'}
+                {t(isManagement ? 'pendingReviews' : 'availableTasks')}
               </span>
               <Badge variant="outline">
-                {isManagement ? pendingReviews.length : openTasks.length} items
+                {isManagement ? pendingReviews.length : openTasks.length} {t('items')}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -599,10 +608,10 @@ export function Dashboard({
               <div className="text-center py-8">
                 <Package className="size-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  {isManagement ? 'No pending reviews' : 'No available tasks'}
+                  {t(isManagement ? 'noPendingReviews' : 'noAvailableTasks')}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {isManagement ? 'All tasks are up to date' : 'Check back later for opportunities'}
+                  {t(isManagement ? 'allTasksUpToDate' : 'checkBackLater')}
                 </p>
               </div>
             ) : (
@@ -647,7 +656,7 @@ export function Dashboard({
                 })}
                 {(isManagement ? pendingReviews : openTasks).length > 4 && (
                   <Button variant="ghost" className="w-full">
-                    View all {(isManagement ? pendingReviews : openTasks).length} items
+                    {t('viewAllTasks')}
                   </Button>
                 )}
               </div>
