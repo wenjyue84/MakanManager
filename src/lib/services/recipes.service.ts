@@ -3,7 +3,8 @@ import {
   Recipe,
   RecipeIngredient,
   RecipeStep,
-  RecipeAttachment
+  RecipeAttachment,
+  User
 
 } from '../types';
 import { jsPDF } from 'jspdf';
@@ -17,7 +18,7 @@ export interface CreateRecipeData {
   yield: string;
   prepTimeMinutes: number;
   tags: string[];
-  photo?: string;
+  photo: string;
   ingredients: RecipeIngredient[];
   steps: RecipeStep[];
   allergens: ('shellfish' | 'dairy' | 'gluten' | 'nuts' | 'soy' | 'egg')[];
@@ -45,7 +46,7 @@ export class RecipeService {
       yield: row.yield,
       prepTimeMinutes: row.prep_time,
       tags: row.tags || [],
-      photo: row.photo || undefined,
+      photo: row.photo,
       ingredients: row.ingredients || [],
       steps,
       allergens: row.allergens || [],
@@ -146,7 +147,7 @@ export class RecipeService {
         data.yield,
         data.prepTimeMinutes,
         data.tags,
-        data.photo || null,
+        data.photo,
         JSON.stringify(data.ingredients),
         stepTexts,
         data.allergens,
