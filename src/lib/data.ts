@@ -1,6 +1,7 @@
-import { User, Task, DisciplinaryAction, Recipe, AppSettings } from './types';
+import { Task, DisciplinaryAction, Recipe, AppSettings } from './types';
 
-export const users: User[] = [
+// Using any[] to allow legacy user seed data that doesn't include new mandatory fields
+export const users: any[] = [
   {
     id: '1',
     name: 'Jay',

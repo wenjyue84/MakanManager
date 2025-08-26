@@ -112,6 +112,7 @@ export function Staff({ onDisciplineClick }: StaffProps) {
     documents: []
   };
   const [addForm, setAddForm] = useState<Partial<StaffMember>>(initialAddForm);
+  const [newDocType, setNewDocType] = useState<'passport' | 'ic' | 'contract' | 'certificate'>('passport');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const { user: currentUser, isLoading } = useCurrentUser();
@@ -273,18 +274,45 @@ export function Staff({ onDisciplineClick }: StaffProps) {
 
   const handleResetPassword = () => {
     if (!selectedStaff) return;
-    
+
     toast.success('Password reset link sent', {
       description: `A password reset link has been sent to ${selectedStaff.name}`
     });
     setIsResetPasswordOpen(false);
   };
 
-  const handleFileUpload = (type: 'photo' | 'document') => {
-    toast.info(`${type === 'photo' ? 'Photo' : 'Document'} upload feature coming soon!`);
+  const handleDocumentUpload = (file: File | null) => {
+    if (!file || !selectedStaff) return;
+    if (!canEditMember(selectedStaff)) {
+      toast.error('You can only edit your own profile');
+      return;
+    }
+
+    const newDoc = {
+      id: Date.now().toString(),
+      name: file.name,
+      type: newDocType,
+      filename: file.name,
+      uploadedBy: currentUser.name,
+      uploadedDate: new Date().toISOString()
+    };
+
+    const updatedDocs = [...(selectedStaff.documents || []), newDoc];
+    updateStaffMember(selectedStaff.id, { documents: updatedDocs });
+    setSelectedStaff({ ...selectedStaff, documents: updatedDocs });
+    toast.success('Document uploaded successfully');
   };
 
   const handleDocumentDelete = (docId: string) => {
+    if (!selectedStaff) return;
+    if (!canEditMember(selectedStaff)) {
+      toast.error('You can only edit your own profile');
+      return;
+    }
+
+    const updatedDocs = selectedStaff.documents.filter(doc => doc.id !== docId);
+    updateStaffMember(selectedStaff.id, { documents: updatedDocs });
+    setSelectedStaff({ ...selectedStaff, documents: updatedDocs });
     toast.success('Document deleted successfully');
   };
 
@@ -520,130 +548,269 @@ export function Staff({ onDisciplineClick }: StaffProps) {
                 </DialogTitle>
               </DialogHeader>
 
-              {!hasRequiredPhoto(selectedStaff) && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="size-4" />
-                  <AlertDescription>
-                    Profile photo required. Please upload a photo to complete the profile.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                {/* Summary Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      Summary
-                      {canEditMember(selectedStaff) && !isEditing && (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleEditProfile(selectedStaff)}
-                        >
-                          <Edit className="size-4 mr-1" />
-                          Edit Profile
-                        </Button>
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="size-16">
-                            <AvatarImage src={selectedStaff.photo} />
-                            <AvatarFallback>{selectedStaff.name[0]}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <h3 className="font-semibold">{selectedStaff.name}</h3>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {selectedStaff.roles.map(role => (
-                                <Badge key={role} variant="outline" className="text-xs">
-                                  {getRoleDisplayName([role])}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <div className="text-muted-foreground">Gender</div>
-                            <div className="capitalize">{selectedStaff.gender}</div>
-                          </div>
-                          <div>
-                            <div className="text-muted-foreground">Status</div>
-                            <Badge variant={selectedStaff.status === 'active' ? 'default' : 'secondary'} className="capitalize">
-                              {selectedStaff.status}
-                            </Badge>
-                          </div>
-                          <div>
-                            <div className="text-muted-foreground">Station</div>
-                            <div className="capitalize">{selectedStaff.station || '—'}</div>
-                          </div>
-                          <div>
-                            <div className="text-muted-foreground">Languages</div>
-                            <div className="flex flex-wrap gap-1">
-                              {selectedStaff.languages?.map(lang => (
-                                <Badge key={lang} variant="secondary" className="text-xs">
-                                  {getLanguageDisplayName(lang)}
-                                </Badge>
-                              )) || '—'}
-                            </div>
-                          </div>
-                        </div>
+              {isEditing ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label>Name *</Label>
+                    <Input className="mt-1" value={editForm.name || ''} onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))} />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Gender *</Label>
+                      <Select value={editForm.gender} onValueChange={(value) => setEditForm(prev => ({ ...prev, gender: value as 'male' | 'female' }))}>
+                        <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {isManagement && (
+                      <div>
+                        <Label>Role *</Label>
+                        <Select value={editForm.roles?.[0]} onValueChange={(value) => setEditForm(prev => ({ ...prev, roles: [value as UserRole] }))}>
+                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="owner">Owner</SelectItem>
+                            <SelectItem value="manager">Manager</SelectItem>
+                            <SelectItem value="head-of-kitchen">HoK</SelectItem>
+                            <SelectItem value="front-desk-manager">FDM</SelectItem>
+                            <SelectItem value="staff">Staff</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                  </CardContent>
-                </Card>
-
-                {/* Details Card */}
-                      <Card>
-                  <CardHeader>
-                    <CardTitle>Contact Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                            <div className="space-y-4">
-                              <div className="flex items-center gap-2">
-                                <Phone className="size-4 text-muted-foreground" />
-                                <span>{selectedStaff.phone}</span>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Phone *</Label>
+                    <Input className="mt-1" value={editForm.phone || ''} onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label>Start Date *</Label>
+                    <Input type="date" className="mt-1" value={editForm.startDate || ''} onChange={(e) => setEditForm(prev => ({ ...prev, startDate: e.target.value }))} />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Emergency Contact Name *</Label>
+                      <Input className="mt-1" value={editForm.emergencyContact?.name || ''} onChange={(e) => setEditForm(prev => ({ ...prev, emergencyContact: { ...prev.emergencyContact, name: e.target.value } }))} />
+                    </div>
+                    <div>
+                      <Label>Emergency Contact Phone *</Label>
+                      <Input className="mt-1" value={editForm.emergencyContact?.phone || ''} onChange={(e) => setEditForm(prev => ({ ...prev, emergencyContact: { ...prev.emergencyContact, phone: e.target.value } }))} />
+                    </div>
+                  </div>
+                  {isManagement && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Status *</Label>
+                        <Select value={editForm.status} onValueChange={(value) => setEditForm(prev => ({ ...prev, status: value as 'active' | 'inactive' }))}>
+                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Station</Label>
+                        <Select value={editForm.station} onValueChange={(value) => setEditForm(prev => ({ ...prev, station: value as Station }))}>
+                          <SelectTrigger className="mt-1"><SelectValue placeholder="Select station" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="kitchen">Kitchen</SelectItem>
+                            <SelectItem value="front">Front</SelectItem>
+                            <SelectItem value="store">Store</SelectItem>
+                            <SelectItem value="outdoor">Outdoor</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Documents</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {selectedStaff.documents.map(doc => (
+                        <div key={doc.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <FileText className="size-4" />
+                            <span>{doc.name}</span>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => handleDocumentDelete(doc.id)}>
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-2 mt-2">
+                        <Select value={newDocType} onValueChange={(value) => setNewDocType(value as any)}>
+                          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="passport">Passport</SelectItem>
+                          <SelectItem value="ic">IC</SelectItem>
+                          <SelectItem value="contract">Contract</SelectItem>
+                          <SelectItem value="certificate">Certificate</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <Input type="file" className="flex-1" onChange={(e) => handleDocumentUpload(e.target.files?.[0] || null)} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button variant="outline" onClick={() => { setIsEditing(false); setEditForm({}); }}>Cancel</Button>
+                    <Button onClick={handleSaveProfile}>Save</Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {!hasRequiredPhoto(selectedStaff) && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="size-4" />
+                      <AlertDescription>
+                        Profile photo required. Please upload a photo to complete the profile.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                    {/* Summary Card */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          Summary
+                          {canEditMember(selectedStaff) && (
+                            <Button size="sm" variant="outline" onClick={() => handleEditProfile(selectedStaff)}>
+                              <Edit className="size-4 mr-1" />
+                              Edit Profile
+                            </Button>
+                          )}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="size-16">
+                              <AvatarImage src={selectedStaff.photo} />
+                              <AvatarFallback>{selectedStaff.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h3 className="font-semibold">{selectedStaff.name}</h3>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {selectedStaff.roles.map(role => (
+                                  <Badge key={role} variant="outline" className="text-xs">
+                                    {getRoleDisplayName([role])}
+                                  </Badge>
+                                ))}
                               </div>
-
-                              {selectedStaff.email && (
-                                <div className="flex items-center gap-2">
-                                  <Mail className="size-4 text-muted-foreground" />
-                                  <span>{selectedStaff.email}</span>
-                                </div>
-                              )}
-
-                              <div className="flex items-center gap-2">
-                                <Calendar className="size-4 text-muted-foreground" />
-                                <span>Started {formatDate(selectedStaff.startDate)}</span>
-                              </div>
-
-                              <div>
-                                <div className="text-sm text-muted-foreground mb-1">Emergency Contact</div>
-                                <div>{selectedStaff.emergencyContact.name}</div>
-                                <div className="text-sm text-muted-foreground">{selectedStaff.emergencyContact.phone}</div>
-                              </div>
-
-                              {isManagement && (
-                                <Button 
-                                  onClick={() => {
-                                    setSelectedStaff(selectedStaff);
-                                    setIsResetPasswordOpen(true);
-                                  }}
-                                  variant="outline" 
-                                  size="sm"
-                                  className="flex items-center gap-2"
-                                >
-                                  <Key className="size-4" />
-                                  Reset Password
-                                </Button>
-                              )}
                             </div>
-                        </CardContent>
-                      </Card>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <div className="text-muted-foreground">Gender</div>
+                              <div className="capitalize">{selectedStaff.gender}</div>
+                            </div>
+                            <div>
+                              <div className="text-muted-foreground">Status</div>
+                              <Badge variant={selectedStaff.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+                                {selectedStaff.status}
+                              </Badge>
+                            </div>
+                            <div>
+                              <div className="text-muted-foreground">Station</div>
+                              <div className="capitalize">{selectedStaff.station || '—'}</div>
+                            </div>
+                            <div>
+                              <div className="text-muted-foreground">Languages</div>
+                              <div className="flex flex-wrap gap-1">
+                                {selectedStaff.languages?.map(lang => (
+                                  <Badge key={lang} variant="secondary" className="text-xs">
+                                    {getLanguageDisplayName(lang)}
+                                  </Badge>
+                                )) || '—'}
                               </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Details Card */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Contact Information</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2">
+                            <Phone className="size-4 text-muted-foreground" />
+                            <span>{selectedStaff.phone}</span>
+                          </div>
+
+                          {selectedStaff.email && (
+                            <div className="flex items-center gap-2">
+                              <Mail className="size-4 text-muted-foreground" />
+                              <span>{selectedStaff.email}</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-2">
+                            <Calendar className="size-4 text-muted-foreground" />
+                            <span>Started {formatDate(selectedStaff.startDate)}</span>
+                          </div>
+
+                          <div>
+                            <div className="text-sm text-muted-foreground mb-1">Emergency Contact</div>
+                            <div>{selectedStaff.emergencyContact.name}</div>
+                            <div className="text-sm text-muted-foreground">{selectedStaff.emergencyContact.phone}</div>
+                          </div>
+
+                          {isManagement && (
+                            <Button onClick={() => { setSelectedStaff(selectedStaff); setIsResetPasswordOpen(true); }} variant="outline" size="sm" className="flex items-center gap-2">
+                              <Key className="size-4" />
+                              Reset Password
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Documents</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {selectedStaff.documents.length === 0 && (
+                        <div className="text-sm text-muted-foreground">No documents uploaded.</div>
+                      )}
+                      {selectedStaff.documents.map(doc => (
+                        <div key={doc.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <FileText className="size-4" />
+                            <span>{doc.name}</span>
+                          </div>
+                          {canEditMember(selectedStaff) && (
+                            <Button variant="ghost" size="sm" onClick={() => handleDocumentDelete(doc.id)}>
+                              <Trash2 className="size-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      {canEditMember(selectedStaff) && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <Select value={newDocType} onValueChange={(value) => setNewDocType(value as any)}>
+                            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="passport">Passport</SelectItem>
+                            <SelectItem value="ic">IC</SelectItem>
+                            <SelectItem value="contract">Contract</SelectItem>
+                            <SelectItem value="certificate">Certificate</SelectItem>
+                          </SelectContent>
+                      </Select>
+                      <Input type="file" className="flex-1" onChange={(e) => handleDocumentUpload(e.target.files?.[0] || null)} />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+                </>
+              )}
             </div>
           )}
         </DialogContent>

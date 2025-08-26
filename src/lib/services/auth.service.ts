@@ -8,6 +8,7 @@ export class AuthService {
     credentials: LoginCredentials
   ): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -27,6 +28,7 @@ export class AuthService {
       }
       if (data.refreshToken) {
         localStorage.setItem(REFRESH_KEY, data.refreshToken);
+
       }
 
       return { success: true, user: data.user };
