@@ -1,38 +1,4 @@
-<<<<<<< HEAD
-modules = ["nodejs-20", "web"]
-
-[deployment]
-run = ["npm", "run", "server"]
-
-[[ports]]
-localPort = 4000
-externalPort = 80
-
-[nix]
-channel = "stable-25_05"
-
-[env]
-PATH = "/home/runner/$REPL_SLUG/.config/npm/node_global/bin:/home/runner/$REPL_SLUG/node_modules/.bin"
-npm_config_prefix = "/home/runner/$REPL_SLUG/.config/npm/node_global"
-=======
-modules = ["nodejs-20", "web", "postgresql-16"]
-run = "npm run dev"
-hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
-
-[nix]
-channel = "stable-24_05"
-
-[deployment]
-deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
-
-[[ports]]
-localPort = 5000
-externalPort = 80
-
-[env]
-PORT = "5000"
+modules = ["nodejs-20", "postgresql-16"]
 
 [workflows]
 runButton = "Project"
@@ -44,14 +10,23 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Start application"
+args = "Server"
 
 [[workflows.workflow]]
-name = "Start application"
+name = "Server"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
+args = "npx vite --host 0.0.0.0 --port 5000"
 waitForPort = 5000
->>>>>>> 21921cb460ed0d092f321d35df67bd036357f61b
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[nix]
+channel = "stable-25_05"
