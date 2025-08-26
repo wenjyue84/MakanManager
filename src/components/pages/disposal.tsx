@@ -45,7 +45,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '../ui/dialog';
-import { currentUser } from '../../lib/data';
+import { useCurrentUserWithFallback } from '../../lib/hooks/use-current-user';
 import { staffMembers } from '../../lib/staff-data';
 import {
   disposals,
@@ -67,6 +67,8 @@ export function DisposalPage() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const [disposalList, setDisposalList] = useState<Disposal[]>(() => [...disposals]);
+
+  const { user: currentUser } = useCurrentUserWithFallback();
 
   // Form state
   const [formData, setFormData] = useState({

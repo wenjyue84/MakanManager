@@ -47,7 +47,8 @@ import {
   SheetTrigger,
 } from '../ui/sheet';
 import { ScrollArea } from '../ui/scroll-area';
-import { currentUser, users } from '../../lib/data';
+import { users } from '../../lib/data';
+import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import { getUnreadCount } from '../../lib/notifications-data';
 import { Language } from '../../lib/types';
 
@@ -99,6 +100,7 @@ export function AppLayout({
   const [mounted, setMounted] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
+  const { user: currentUser, isLoading } = useCurrentUser();
 
   useEffect(() => {
     setMounted(true);
@@ -121,9 +123,9 @@ export function AppLayout({
     return () => clearInterval(interval);
   }, []);
 
-  // Don't render until mounted to avoid hydration issues
-  if (!mounted) {
-    return <div className="h-screen bg-background" />; 
+  // Don't render until mounted and user loaded to avoid hydration issues
+  if (!mounted || isLoading || !currentUser) {
+    return <div className="h-screen bg-background" />;
   }
 
   const isManagement = currentUser.roles.some(role => 
