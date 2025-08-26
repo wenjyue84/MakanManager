@@ -37,6 +37,7 @@ import { tasks, users } from '../../lib/data';
 import { getUnreadCount } from '../../lib/notifications-data';
 import { Task, User as UserType } from '../../lib/types';
 import { useCurrentUser } from '../../lib/hooks/use-current-user';
+import { useTranslations } from '../../lib/hooks/use-translations';
 
 interface DashboardProps {
   onTaskClick: (task: Task) => void;
@@ -66,6 +67,7 @@ export function Dashboard({
   onGetHelp
 }: DashboardProps) {
   const { user: currentUser, isLoading } = useCurrentUser();
+  const { t } = useTranslations();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [salesData, setSalesData] = useState({
     today: 2675.50,
@@ -82,7 +84,7 @@ export function Dashboard({
 
   // Safety check for currentUser
   if (isLoading || !currentUser) {
-    return <div>Loading...</div>;
+    return <div>{t('loading')}</div>;
   }
 
   const isManagement = currentUser.roles.some(role => 
@@ -122,15 +124,15 @@ export function Dashboard({
 
   // Quick actions based on role
   const quickActions = isManagement ? [
-    { id: 'new-order', label: 'New Order', icon: Package, action: onNewOrder, color: 'primary' },
-    { id: 'cash-count', label: 'Cash Count', icon: Wallet, action: onCashCount, color: 'warning' },
-    { id: 'staff-meal', label: 'Staff Meal', icon: Utensils, action: onStaffMeal, color: 'success' },
-    { id: 'issue-report', label: 'Report Issue', icon: AlertTriangle, action: onReportIssue, color: 'destructive' }
+    { id: 'new-order', label: t('newOrder'), icon: Package, action: onNewOrder, color: 'primary' },
+    { id: 'cash-count', label: t('cashCount'), icon: Wallet, action: onCashCount, color: 'warning' },
+    { id: 'staff-meal', label: t('staffMeal'), icon: Utensils, action: onStaffMeal, color: 'success' },
+    { id: 'issue-report', label: t('reportIssue'), icon: AlertTriangle, action: onReportIssue, color: 'destructive' }
   ] : [
-    { id: 'clock-in', label: 'Clock In/Out', icon: Clock, action: onClockIn, color: 'primary' },
-    { id: 'staff-meal', label: 'Request Meal', icon: Utensils, action: onRequestMeal, color: 'success' },
-    { id: 'break', label: 'Take Break', icon: Coffee, action: onTakeBreak, color: 'secondary' },
-    { id: 'help', label: 'Get Help', icon: AlertCircle, action: onGetHelp, color: 'outline' }
+    { id: 'clock-in', label: t('clockInOut'), icon: Clock, action: onClockIn, color: 'primary' },
+    { id: 'staff-meal', label: t('requestMeal'), icon: Utensils, action: onRequestMeal, color: 'success' },
+    { id: 'break', label: t('takeBreak'), icon: Coffee, action: onTakeBreak, color: 'secondary' },
+    { id: 'help', label: t('getHelp'), icon: AlertCircle, action: onGetHelp, color: 'outline' }
   ];
 
   // Staff performance data

@@ -34,6 +34,27 @@ export const vi = {
   next: "Tiếp theo",
   previous: "Trước đó",
 
+  // Auth
+  appName: "Makan Manager",
+  appTagline: "Hệ thống quản lý nhân viên nhà hàng",
+  signInToContinue: "Đăng nhập vào tài khoản của bạn để tiếp tục",
+  emailAddress: "Địa chỉ Email",
+  enterYourEmail: "Nhập email của bạn",
+  password: "Mật khẩu",
+  enterYourPassword: "Nhập mật khẩu của bạn",
+  signIn: "Đăng nhập",
+  signingIn: "Đang đăng nhập...",
+  tryDemoAccounts: "Thử tài khoản demo:",
+  owner: "Chủ",
+  manager: "Quản lý",
+  kitchen: "Bếp",
+  pleaseFillAllFields: "Vui lòng điền vào tất cả các trường",
+  loginSuccessful: "Đăng nhập thành công! Chào mừng trở lại.",
+  loginFailed: "Đăng nhập thất bại. Vui lòng kiểm tra thông tin.",
+  demoLoginSuccessful: "Đăng nhập demo thành công!",
+  demoLoginFailed: "Đăng nhập demo thất bại.",
+  unexpectedError: "Đã xảy ra lỗi bất ngờ.",
+
   // Dashboard
   welcomeBack: "Chào mừng trở lại",
   todayTasks: "Nhiệm vụ hôm nay",
@@ -42,6 +63,13 @@ export const vi = {
   createTask: "Tạo nhiệm vụ",
   viewAllTasks: "Xem tất cả nhiệm vụ",
   viewAllOrders: "Xem tất cả đơn hàng",
+  newOrder: "Đơn mới",
+  cashCount: "Kiểm tiền",
+  reportIssue: "Báo cáo vấn đề",
+  clockInOut: "Chấm công",
+  requestMeal: "Yêu cầu bữa ăn",
+  takeBreak: "Nghỉ giải lao",
+  getHelp: "Nhận trợ giúp",
 
   // Tasks
   taskTitle: "Tiêu đề nhiệm vụ",

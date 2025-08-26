@@ -1,8 +1,8 @@
 import { useLanguage } from '../contexts/language-context';
 
-// Simple translation function that returns the key if no translation is found
+// Translation hook that prefers context translations and falls back to internal defaults
 export function useTranslations() {
-  const { currentLanguage, t, setLanguage, languageNames } = useLanguage();
+  const { currentLanguage, t: contextT, setLanguage, languageNames } = useLanguage();
   
   // Fallback translations for common UI elements
   const fallbackTranslations: Record<string, Record<string, string>> = {
@@ -213,6 +213,10 @@ export function useTranslations() {
   };
 
   const translate = (key: string): string => {
+    const translated = contextT(key as any);
+    if (translated && translated !== key) {
+      return translated;
+    }
     const translations = fallbackTranslations[currentLanguage] || fallbackTranslations.en;
     return translations[key] || key;
   };

@@ -1140,8 +1140,11 @@ export const formatCurrency = (amount: number): string => {
   return `RM${amount.toFixed(2)}`;
 };
 
-export const formatDateTime = (dateString: string): string => {
-  return new Date(dateString).toLocaleString("en-US", {
+export const formatDateTime = (
+  dateString: string,
+  locale: string = typeof navigator !== 'undefined' ? navigator.language : 'en-US'
+): string => {
+  return new Date(dateString).toLocaleString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",

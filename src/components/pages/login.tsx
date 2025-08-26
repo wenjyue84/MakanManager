@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../lib/contexts/auth-context';
+import { useTranslations } from '../../lib/hooks/use-translations';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -14,8 +15,9 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { login, error, clearError, isLoading } = useAuth();
+  const { t } = useTranslations();
 
   // Clear error when component mounts or when error changes
   useEffect(() => {
@@ -28,7 +30,7 @@ export function LoginPage() {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error('Please fill in all fields');
+      toast.error(t('pleaseFillAllFields'));
       return;
     }
 
@@ -37,12 +39,12 @@ export function LoginPage() {
     try {
       const success = await login({ email, password });
       if (success) {
-        toast.success('Login successful! Welcome back.');
+        toast.success(t('loginSuccessful'));
       } else {
-        toast.error('Login failed. Please check your credentials.');
+        toast.error(t('loginFailed'));
       }
     } catch (error) {
-      toast.error('An unexpected error occurred.');
+      toast.error(t('unexpectedError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -53,10 +55,10 @@ export function LoginPage() {
     try {
       const success = await login({ email: demoEmail, password: 'password123' });
       if (success) {
-        toast.success('Demo login successful!');
+        toast.success(t('demoLoginSuccessful'));
       }
     } catch (error) {
-      toast.error('Demo login failed.');
+      toast.error(t('demoLoginFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -65,7 +67,7 @@ export function LoginPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50">
-        <LoadingSpinner size="lg" text="Loading..." />
+        <LoadingSpinner size="lg" text={t('loading')} />
       </div>
     );
   }
@@ -79,10 +81,10 @@ export function LoginPage() {
             <ChefHat className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Makan Manager
+            {t('appName')}
           </h1>
           <p className="text-gray-600">
-            Restaurant Staff Management System
+            {t('appTagline')}
           </p>
         </div>
 
@@ -90,10 +92,10 @@ export function LoginPage() {
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl font-semibold text-gray-900">
-              Welcome Back
+              {t('welcomeBack')}
             </CardTitle>
             <CardDescription className="text-gray-600">
-              Sign in to your account to continue
+              {t('signInToContinue')}
             </CardDescription>
           </CardHeader>
           
@@ -101,12 +103,12 @@ export function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email Address
+                  {t('emailAddress')}
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('enterYourEmail')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-11"
@@ -116,13 +118,13 @@ export function LoginPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password
+                  {t('password')}
                 </Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
+                    placeholder={t('enterYourPassword')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="h-11 pr-10"
@@ -150,10 +152,10 @@ export function LoginPage() {
                 {isSubmitting ? (
                   <>
                     <LoadingSpinner size="sm" />
-                    Signing In...
+                    {t('signingIn')}
                   </>
                 ) : (
-                  'Sign In'
+                  t('signIn')
                 )}
               </Button>
             </form>
@@ -161,7 +163,7 @@ export function LoginPage() {
             {/* Demo Accounts */}
             <div className="pt-4 border-t border-gray-200">
               <p className="text-sm text-gray-600 text-center mb-3">
-                Try demo accounts:
+                {t('tryDemoAccounts')}
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <Button
@@ -171,7 +173,7 @@ export function LoginPage() {
                   disabled={isSubmitting}
                   className="text-xs"
                 >
-                  Owner (Jay)
+                  {t('owner')} (Jay)
                 </Button>
                 <Button
                   variant="outline"
@@ -180,7 +182,7 @@ export function LoginPage() {
                   disabled={isSubmitting}
                   className="text-xs"
                 >
-                  Manager (Simon)
+                  {t('manager')} (Simon)
                 </Button>
                 <Button
                   variant="outline"
@@ -189,7 +191,7 @@ export function LoginPage() {
                   disabled={isSubmitting}
                   className="text-xs"
                 >
-                  Kitchen (Lily)
+                  {t('kitchen')} (Lily)
                 </Button>
                 <Button
                   variant="outline"
@@ -198,7 +200,7 @@ export function LoginPage() {
                   disabled={isSubmitting}
                   className="text-xs"
                 >
-                  Staff (Ana)
+                  {t('staff')} (Ana)
                 </Button>
               </div>
             </div>

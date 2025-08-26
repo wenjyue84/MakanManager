@@ -363,9 +363,12 @@ export const formatTimeAgo = (timestamp: string): string => {
   return time.toLocaleDateString();
 };
 
-export const formatNotificationTime = (timestamp: string): string => {
+export const formatNotificationTime = (
+  timestamp: string,
+  locale: string = typeof navigator !== 'undefined' ? navigator.language : 'en-US'
+): string => {
   const time = new Date(timestamp);
-  return time.toLocaleTimeString('en-US', {
+  return time.toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit'
   });
