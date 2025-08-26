@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Separator } from '../../ui/separator';
 import { Badge } from '../../ui/badge';
 import { staffMembers } from '../../../lib/staff-data';
-import { PURCHASE_ITEM_CATEGORIES, URGENCY_LEVELS, COMMON_UNITS } from '../../../lib/purchase-list-constants';
+import { PURCHASE_ITEM_CATEGORIES, URGENCY_LEVELS, COMMON_UNITS, PURCHASE_STATUSES } from '../../../lib/purchase-list-constants';
 import { 
   formatCurrency, 
   formatDateTime, 
@@ -273,10 +273,10 @@ export function PurchaseDialogs({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label>Preferred Supplier *</Label>
-                <Select value={formData.preferredSupplier} onValueChange={(value) => 
+                <Select value={formData.preferredSupplier} onValueChange={(value) =>
                   setFormData(prev => ({ ...prev, preferredSupplier: value }))
                 }>
                   <SelectTrigger className="mt-1">
@@ -299,6 +299,26 @@ export function PurchaseDialogs({
                   onChange={(e) => setFormData(prev => ({ ...prev, neededBy: e.target.value }))}
                   className="mt-1"
                 />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) =>
+                    setFormData(prev => ({ ...prev, status: value }))
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PURCHASE_STATUSES.filter(status => status.value !== 'purchased' || formData.status === 'purchased').map(status => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
