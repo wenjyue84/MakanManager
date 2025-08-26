@@ -140,11 +140,11 @@ CREATE INDEX idx_purchases_supplier_performance ON purchases(supplier, status, d
 -- ==================== DISCIPLINARY ACTIONS INDEXES ====================
 
 -- Index for employee disciplinary history
-CREATE INDEX idx_disciplinary_user_date ON disciplinary_actions(target_user_id, created_at DESC) 
-INCLUDE (type, points, reason);
+CREATE INDEX idx_disciplinary_user_date ON disciplinary_actions(target_user_id, created_at DESC)
+INCLUDE (type_id, type, points, reason);
 
 -- Index for management reporting
-CREATE INDEX idx_disciplinary_creator_type ON disciplinary_actions(created_by_id, type, created_at DESC);
+CREATE INDEX idx_disciplinary_creator_type ON disciplinary_actions(created_by_id, type_id, created_at DESC);
 
 -- ==================== POINT ENTRIES INDEXES ====================
 

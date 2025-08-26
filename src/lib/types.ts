@@ -100,12 +100,19 @@ export interface ReportMetrics {
 export interface DisciplinaryAction {
   id: string;
   targetUserId: string;
+  typeId: string;
   type: string;
   points: number;
   reason: string;
   createdById: string;
   createdAt: string;
   attachments?: string[];
+}
+
+export interface DisciplinaryType {
+  id: string;
+  name: string;
+  defaultPoints: number;
 }
 
 export interface RecipeIngredient {

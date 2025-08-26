@@ -89,11 +89,18 @@ CREATE TABLE task_history (
     user_id UUID REFERENCES users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+-- Disciplinary Types table
+CREATE TABLE disciplinary_types (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL,
+    default_points INTEGER NOT NULL
+);
 
 -- Disciplinary Actions table
 CREATE TABLE disciplinary_actions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     target_user_id UUID NOT NULL REFERENCES users(id),
+    type_id UUID NOT NULL REFERENCES disciplinary_types(id),
     type VARCHAR(100) NOT NULL,
     points INTEGER DEFAULT 0,
     reason TEXT NOT NULL,
