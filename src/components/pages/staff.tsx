@@ -243,141 +243,141 @@ export function Staff({ onDisciplineClick }: StaffProps) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Staff</h1>
-            <p className="text-muted-foreground">Welcome back, {currentUser.name}</p>
-          </div>
-          
-          {isManagement && (
-            <div className="flex gap-2">
-              <Button onClick={handleAddStaff} className="flex items-center gap-2">
-                <Plus className="size-4" />
-                Add Staff
-              </Button>
-              <Button onClick={handleExportCSV} variant="outline" className="flex items-center gap-2">
-                <Download className="size-4" />
-                Export CSV
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Search and Filters */}
+      <div className="space-y-6">
+        {/* Header */}
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search staff..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Staff</h1>
+              <p className="text-muted-foreground">Welcome back, {currentUser.name}</p>
             </div>
-
-            {/* Filters */}
-            <div className="flex flex-wrap gap-2">
-              <Select value={selectedRole} onValueChange={setSelectedRole}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="management">Management</SelectItem>
-                  <SelectItem value="owner">Owner</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="head-of-kitchen">HoK</SelectItem>
-                  <SelectItem value="front-desk-manager">FDM</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedGender} onValueChange={setSelectedGender}>
-                <SelectTrigger className="w-28">
-                  <SelectValue placeholder="Gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-28">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedStation} onValueChange={setSelectedStation}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Station" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Stations</SelectItem>
-                  <SelectItem value="kitchen">Kitchen</SelectItem>
-                  <SelectItem value="front">Front</SelectItem>
-                  <SelectItem value="store">Store</SelectItem>
-                  <SelectItem value="outdoor">Outdoor</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {(searchQuery || selectedRole !== 'all' || selectedGender !== 'all' || selectedStatus !== 'all' || selectedStation !== 'all') && (
-                <Button onClick={clearFilters} variant="outline" size="sm">
-                  <X className="size-4 mr-1" />
-                  Clear
+            
+            {isManagement && (
+              <div className="flex gap-2">
+                <Button onClick={handleAddStaff} className="flex items-center gap-2">
+                  <Plus className="size-4" />
+                  Add Staff
                 </Button>
-              )}
+                <Button onClick={handleExportCSV} variant="outline" className="flex items-center gap-2">
+                  <Download className="size-4" />
+                  Export CSV
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Search and Filters */}
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Search */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search staff..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Filters */}
+              <div className="flex flex-wrap gap-2">
+                <Select value={selectedRole} onValueChange={setSelectedRole}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="management">Management</SelectItem>
+                    <SelectItem value="owner">Owner</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="head-of-kitchen">HoK</SelectItem>
+                    <SelectItem value="front-desk-manager">FDM</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedGender} onValueChange={setSelectedGender}>
+                  <SelectTrigger className="w-28">
+                    <SelectValue placeholder="Gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                  <SelectTrigger className="w-28">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedStation} onValueChange={setSelectedStation}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Station" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Stations</SelectItem>
+                    <SelectItem value="kitchen">Kitchen</SelectItem>
+                    <SelectItem value="front">Front</SelectItem>
+                    <SelectItem value="store">Store</SelectItem>
+                    <SelectItem value="outdoor">Outdoor</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {(searchQuery || selectedRole !== 'all' || selectedGender !== 'all' || selectedStatus !== 'all' || selectedStation !== 'all') && (
+                  <Button onClick={clearFilters} variant="outline" size="sm">
+                    <X className="size-4 mr-1" />
+                    Clear
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Staff Directory */}
-      <div>
-        {filteredStaff.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-muted-foreground">
-              No staff match your filters.
-            </div>
-          </div>
-        ) : (
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Photo</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Role(s)</TableHead>
-                  <TableHead>Gender</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Station</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStaff.map((member) => (
+        {/* Staff Directory */}
+        <div>
+          {filteredStaff.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground">
+                No staff match your filters.
+              </div>
+                </div>
+              ) : (
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Photo</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Role(s)</TableHead>
+                        <TableHead>Gender</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Start Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Station</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredStaff.map((member) => (
                   <TableRow key={member.id}>
-                    <TableCell>
-                      <Avatar className="size-8">
-                        <AvatarImage src={member.photo} />
-                        <AvatarFallback>{member.name[0]}</AvatarFallback>
-                      </Avatar>
-                    </TableCell>
+      <TableCell>
+          <Avatar className="size-8">
+            <AvatarImage src={member.photo} />
+            <AvatarFallback>{member.name[0]}</AvatarFallback>
+          </Avatar>
+      </TableCell>
                     <TableCell className="font-medium">{member.name}</TableCell>
-                    <TableCell>
+      <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {member.roles.map(role => (
                           <Badge key={role} variant="outline" className="text-xs">
@@ -385,41 +385,41 @@ export function Staff({ onDisciplineClick }: StaffProps) {
                           </Badge>
                         ))}
                       </div>
-                    </TableCell>
+      </TableCell>
                     <TableCell className="capitalize">{member.gender}</TableCell>
-                    <TableCell>{member.phone}</TableCell>
-                    <TableCell>{formatDate(member.startDate)}</TableCell>
-                    <TableCell>
-                      <Badge variant={member.status === 'active' ? 'default' : 'secondary'} className="capitalize">
-                        {member.status}
-                      </Badge>
-                    </TableCell>
+      <TableCell>{member.phone}</TableCell>
+      <TableCell>{formatDate(member.startDate)}</TableCell>
+      <TableCell>
+        <Badge variant={member.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+          {member.status}
+        </Badge>
+      </TableCell>
                     <TableCell className="capitalize">{member.station || '—'}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+      <TableCell>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleViewProfile(member)}>
                             <Eye className="size-4 mr-2" />
                             View Profile
-                          </DropdownMenuItem>
+                </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEditProfile(member)}>
                             <Edit className="size-4 mr-2" />
                             Edit
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+      </TableCell>
+    </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+          )}
       </div>
 
       {/* Profile Dialog */}
@@ -470,102 +470,102 @@ export function Staff({ onDisciplineClick }: StaffProps) {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-16">
-                          <AvatarImage src={selectedStaff.photo} />
-                          <AvatarFallback>{selectedStaff.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold">{selectedStaff.name}</h3>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {selectedStaff.roles.map(role => (
-                              <Badge key={role} variant="outline" className="text-xs">
-                                {getRoleDisplayName([role])}
-                              </Badge>
-                            ))}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-16">
+                            <AvatarImage src={selectedStaff.photo} />
+                            <AvatarFallback>{selectedStaff.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h3 className="font-semibold">{selectedStaff.name}</h3>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {selectedStaff.roles.map(role => (
+                                <Badge key={role} variant="outline" className="text-xs">
+                                  {getRoleDisplayName([role])}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <div className="text-muted-foreground">Gender</div>
-                          <div className="capitalize">{selectedStaff.gender}</div>
-                        </div>
-                        <div>
-                          <div className="text-muted-foreground">Status</div>
-                          <Badge variant={selectedStaff.status === 'active' ? 'default' : 'secondary'} className="capitalize">
-                            {selectedStaff.status}
-                          </Badge>
-                        </div>
-                        <div>
-                          <div className="text-muted-foreground">Station</div>
-                          <div className="capitalize">{selectedStaff.station || '—'}</div>
-                        </div>
-                        <div>
-                          <div className="text-muted-foreground">Languages</div>
-                          <div className="flex flex-wrap gap-1">
-                            {selectedStaff.languages?.map(lang => (
-                              <Badge key={lang} variant="secondary" className="text-xs">
-                                {getLanguageDisplayName(lang)}
-                              </Badge>
-                            )) || '—'}
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <div className="text-muted-foreground">Gender</div>
+                            <div className="capitalize">{selectedStaff.gender}</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Status</div>
+                            <Badge variant={selectedStaff.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+                              {selectedStaff.status}
+                            </Badge>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Station</div>
+                            <div className="capitalize">{selectedStaff.station || '—'}</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Languages</div>
+                            <div className="flex flex-wrap gap-1">
+                              {selectedStaff.languages?.map(lang => (
+                                <Badge key={lang} variant="secondary" className="text-xs">
+                                  {getLanguageDisplayName(lang)}
+                                </Badge>
+                              )) || '—'}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
                   </CardContent>
                 </Card>
 
                 {/* Details Card */}
-                <Card>
+                      <Card>
                   <CardHeader>
                     <CardTitle>Contact Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <Phone className="size-4 text-muted-foreground" />
-                        <span>{selectedStaff.phone}</span>
-                      </div>
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-2">
+                                <Phone className="size-4 text-muted-foreground" />
+                                <span>{selectedStaff.phone}</span>
+                              </div>
 
-                      {selectedStaff.email && (
-                        <div className="flex items-center gap-2">
-                          <Mail className="size-4 text-muted-foreground" />
-                          <span>{selectedStaff.email}</span>
-                        </div>
-                      )}
+                              {selectedStaff.email && (
+                                <div className="flex items-center gap-2">
+                                  <Mail className="size-4 text-muted-foreground" />
+                                  <span>{selectedStaff.email}</span>
+                                </div>
+                              )}
 
-                      <div className="flex items-center gap-2">
-                        <Calendar className="size-4 text-muted-foreground" />
-                        <span>Started {formatDate(selectedStaff.startDate)}</span>
-                      </div>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="size-4 text-muted-foreground" />
+                                <span>Started {formatDate(selectedStaff.startDate)}</span>
+                              </div>
 
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Emergency Contact</div>   
-                        <div>{selectedStaff.emergencyContact.name}</div>
-                        <div className="text-sm text-muted-foreground">{selectedStaff.emergencyContact.phone}</div>
-                      </div>
+                              <div>
+                                <div className="text-sm text-muted-foreground mb-1">Emergency Contact</div>
+                                <div>{selectedStaff.emergencyContact.name}</div>
+                                <div className="text-sm text-muted-foreground">{selectedStaff.emergencyContact.phone}</div>
+                              </div>
 
-                      {isManagement && ( 
-                        <Button
-                          onClick={() => {
-                            setSelectedStaff(selectedStaff);
-                            setIsResetPasswordOpen(true);
-                          }}
-                          variant="outline"
-                          size="sm"      
-                          className="flex items-center gap-2"
-                        >
-                          <Key className="size-4" />
-                          Reset Password 
-                        </Button>        
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                              {isManagement && (
+                                <Button 
+                                  onClick={() => {
+                                    setSelectedStaff(selectedStaff);
+                                    setIsResetPasswordOpen(true);
+                                  }}
+                                  variant="outline" 
+                                  size="sm"
+                                  className="flex items-center gap-2"
+                                >
+                                  <Key className="size-4" />
+                                  Reset Password
+                                </Button>
+                              )}
+                            </div>
+                        </CardContent>
+                      </Card>
+                              </div>
             </div>
           )}
         </DialogContent>
