@@ -1,93 +1,358 @@
 // Prisma schema for MakanManager
-// Generated based on available models
+// Based on PRD specifications
 
- datasource db {
+datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
- }
-
- generator client {
-  provider = "prisma-client-js"
- }
-
- model Staff {
-  id          String      @id @default(uuid())
-  name        String
-  roles       String      // comma separated roles
-  gender      String?
-  phone       String
-  email       String
-  startDate   DateTime?
-  dateOfBirth DateTime?
-  address     String?
-  points      Int         @default(0)
-  status      String?     @default("active")
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  tasks       Task[]      @relation("StaffTasks", references: [id])
-  documents   Document[]
-  skills      UserSkill[]
- }
-
- model Document {
-  id        String   @id @default(uuid())
-  staff     Staff    @relation(fields: [staffId], references: [id])
-  staffId   String
-  fileName  String
-  url       String
-  createdAt DateTime @default(now())
- }
-
- model Skill {
-  id    String      @id @default(uuid())
-  name  String      @unique
-  users UserSkill[]
- }
-
- model UserSkill {
-  id            String   @id @default(uuid())
-  staff         Staff    @relation(fields: [staffId], references: [id])
-  staffId       String
-  skill         Skill    @relation(fields: [skillId], references: [id])
-  skillId       String
-  verified      Boolean  @default(false)
-  pointsAwarded Boolean  @default(false)
-  createdAt     DateTime @default(now())
- }
-
-model Task {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  status      String   @default("open")
-  dueDate     DateTime?
-  basePoints  Int?    @default(0)
-  assignerId  String?
-  assigneeId  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  assigner    Staff?   @relation("StaffTasks", fields: [assignerId], references: [id])
-  assignee    Staff?   @relation("StaffTasks", fields: [assigneeId], references: [id])
 }
 
+generator client {
+  provider = "prisma-client-js"
+}
 
-model Recipe {
+model User {
+  id                String   @id @default(uuid())
+  username          String   @unique
+  passwordHash      String
+  name              String
+  phone             String
+  email             String?
+  roles             String[] // Array of roles: owner, manager, head-of-kitchen, front-desk-manager, staff
+  purchasingPerm    Boolean  @default(false)
+  department        String?
+  status            String   @default("active")
+  photoUrl          String?
+  startDate         DateTime
+  emergencyContact  Json     // {name: string, phone: string}
+  station           String?  // kitchen, front, store, outdoor
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  assignedTasks     Task[]   @relation("TaskAssignee")
+  createdTasks      Task[]   @relation("TaskAssigner")
+  pointEntries      PointEntry[]
+  disciplinaryActions DisciplinaryAction[] @relation("DisciplinaryTarget")
+  createdDisciplinary DisciplinaryAction[] @relation("DisciplinaryCreator")
+  verifiedSkills    UserSkill[] @relation("SkillVerifier")
+  createdSpending   Spending[] @relation("SpendingCreator")
+  approvedSpending  Spending[] @relation("SpendingApprover")
+  createdIssues     Issue[] @relation("IssueReporter")
+  targetIssues      Issue[] @relation("IssueTarget")
+  createdMeals      StaffMeal[] @relation("MealCooker")
+  mealEaters        StaffMealEater[]
+  createdDisposals  Disposal[] @relation("DisposalCreator")
+  createdPurchases  PurchaseItem[] @relation("PurchaseCreator")
+  createdRecipes    Recipe[] @relation("RecipeCreator")
+  updatedRecipes    Recipe[] @relation("RecipeUpdater")
+  createdReminders  Reminder[]
+  createdAttachments Attachment[] @relation("AttachmentCreator")
+}
+
+model Task {
+  id              String     @id @default(uuid())
+  title           String
+  description     String
+  station         String     // kitchen, front, store, outdoor
+  points          Int        @default(50)
+  dueAt           DateTime
+  status          String     // open, in-progress, on-hold, pending-review, overdue, done
+  assignerId      String
+  assigneeId      String?
+  proofType       String     // photo, text, checklist, none
+  allowMultiplier Boolean    @default(true)
+  overdueDays     Int?       @default(0)
+  templateId      String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  
+  // Relations
+  assigner        User       @relation("TaskAssigner", fields: [assignerId], references: [id])
+  assignee        User?      @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  events          TaskEvent[]
+  pointEntries    PointEntry[]
+  reminders       Reminder[]
+  attachments     Attachment[] @relation("TaskAttachments")
+  
+  @@index([status, dueAt])
+  @@index([assigneeId])
+  @@index([assignerId])
+}
+
+model TaskEvent {
+  id        String   @id @default(uuid())
+  taskId    String
+  actorId   String
+  type      String   // Create, Assign, Claim, Submit, Approve, Reject, Hold, Resume, AutoOverdue, Edit
+  meta      Json     // Additional event data
+  createdAt DateTime @default(now())
+  
+  // Relations
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model PointEntry {
+  id          String   @id @default(uuid())
+  userId      String
+  source      String   // Task, Discipline, Skill, Manual, Issue
+  taskId      String?
+  issueId     String?
+  value       Int      // Can be positive or negative
+  multiplier  Float?
+  adjustment  Int?
+  reason      String?
+  approvedById String
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+  task        Task?    @relation(fields: [taskId], references: [id])
+  issue       Issue?   @relation(fields: [issueId], references: [id])
+  approver    User     @relation(fields: [approvedById], references: [id])
+  
+  @@index([userId, createdAt])
+}
+
+model DisciplinaryType {
   id            String   @id @default(uuid())
   name          String
-  category      String
-  cuisine       String
-  station       String
-  yield         String
-  prepTime      Int
-  tags          String[]
-  photo         String
-  ingredients   Json
-  steps         String[]
-  allergens     String[]
-  notes         String?
-  createdBy     String
-  updatedBy     String
+  defaultPoints Int      // Negative value
+  active        Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
 
+model DisciplinaryAction {
+  id           String   @id @default(uuid())
+  targetUserId String
+  typeId       String
+  points       Int      // Negative value
+  reason       String
+  createdById  String
+  createdAt    DateTime @default(now())
+  attachmentIds String[] // Array of attachment IDs
+  
+  // Relations
+  targetUser   User     @relation("DisciplinaryTarget", fields: [targetUserId], references: [id])
+  type         DisciplinaryType @relation(fields: [typeId], references: [id])
+  createdBy    User     @relation("DisciplinaryCreator", fields: [createdById], references: [id])
+}
+
+model Recipe {
+  id           String   @id @default(uuid())
+  name         String
+  category     String
+  cuisine      String?
+  photoUrl     String
+  ingredients  Json     // Array of {name, qty, unit}
+  steps        Json     // Array of step objects with optional timers
+  allergens    Json     // Array of allergen strings
+  tags         Json     // Array of tag strings
+  prepTimeMins Int
+  station      String
+  yieldText    String
+  createdById  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  createdBy    User     @relation("RecipeCreator", fields: [createdById], references: [id])
+  updatedBy    User     @relation("RecipeUpdater", fields: [createdById], references: [id])
+}
+
+model StaffMeal {
+  id          String   @id @default(uuid())
+  mealType    String   // Lunch, Dinner
+  at          DateTime
+  dishName    String
+  cookedById  String
+  approxCost  Float
+  photoUrl    String
+  notes       String?
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  cookedBy    User     @relation("MealCooker", fields: [cookedById], references: [id])
+  eaters      StaffMealEater[]
+}
+
+model StaffMealEater {
+  id        String     @id @default(uuid())
+  mealId    String
+  userId    String
+  createdAt DateTime   @default(now())
+  
+  // Relations
+  meal      StaffMeal  @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id])
+}
+
+model Disposal {
+  id        String   @id @default(uuid())
+  at        DateTime
+  item      String
+  qty       Float
+  unit      String
+  reason    String   // Expired, Spoiled, Overcooked, Prep Error, Other
+  station   String
+  thrownById String
+  photoUrl  String
+  notes     String?
+  createdAt DateTime @default(now())
+  
+  // Relations
+  thrownBy  User     @relation("DisposalCreator", fields: [thrownById], references: [id])
+}
+
+model Issue {
+  id           String   @id @default(uuid())
+  code         String   @unique // e.g., ISS-101
+  title        String
+  category     String   // Complaint, Hygiene, Wastage, Recipe, Disciplinary, Stock-out
+  station      String
+  description  String
+  photoUrl     String?
+  reportedById String
+  targetUserId String?
+  defaultPoints Int     // Default negative points for category
+  managerExtra Int      @default(0) // Additional points manager can apply
+  ownerExtra   Int      @default(0) // Additional points owner can apply
+  status       String   // Open, Investigating, Resolved, Dismissed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  reportedBy   User     @relation("IssueReporter", fields: [reportedById], references: [id])
+  targetUser   User?    @relation("IssueTarget", fields: [targetUserId], references: [id])
+  pointEntries PointEntry[]
+  
+  @@index([status, category])
+}
+
+model PurchaseItem {
+  id                String   @id @default(uuid())
+  name              String
+  qty               Float
+  unit              String
+  preferredSupplier String
+  neededBy          DateTime
+  urgency           String   // Low, Med, High
+  notes             String?
+  addedById         String
+  status            String   // New, Reviewed, Ordered, Received
+  photoUrl          String?
+  createdAt         DateTime @default(now())
+  
+  // Relations
+  addedBy           User     @relation("PurchaseCreator", fields: [addedById], references: [id])
+  spendingLinks     SpendingPurchaseLink[]
+}
+
+model Spending {
+  id           String   @id @default(uuid())
+  type         String   // Expense, Stock Purchase, Asset Purchase, Reimbursement
+  at           DateTime
+  supplier     String
+  category     String
+  amount       Float
+  sstPercent   Float
+  sstMode      String   // Inclusive, Exclusive
+  method       String   // Cash, Bank, eWallet, Card
+  station      String
+  paidById     String
+  approvedById String?
+  referenceNo  String?
+  status       String   // Draft, Approved, Locked
+  notes        String?
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  paidBy       User     @relation("SpendingCreator", fields: [paidById], references: [id])
+  approvedBy   User?    @relation("SpendingApprover", fields: [approvedById], references: [id])
+  purchaseLinks SpendingPurchaseLink[]
+  attachments  Attachment[] @relation("SpendingAttachments")
+  
+  @@index([at, type])
+}
+
+model SpendingPurchaseLink {
+  id             String @id @default(uuid())
+  spendingId     String
+  purchaseItemId String
+  
+  // Relations
+  spending       Spending     @relation(fields: [spendingId], references: [id], onDelete: Cascade)
+  purchaseItem   PurchaseItem @relation(fields: [purchaseItemId], references: [id], onDelete: Cascade)
+}
+
+model Skill {
+  id    String      @id @default(uuid())
+  name  String      @unique
+  active Boolean    @default(true)
+  createdAt DateTime @default(now())
+  
+  // Relations
+  userSkills UserSkill[]
+}
+
+model UserSkill {
+  id            String   @id @default(uuid())
+  userId        String
+  skillId       String
+  level         String   // None, Basic, Proficient, Expert
+  verified      Boolean  @default(false)
+  verifiedById  String?
+  verifiedAt    DateTime?
+  createdAt     DateTime @default(now())
+  
+  // Relations
+  user          User     @relation(fields: [userId], references: [id])
+  skill         Skill    @relation(fields: [skillId], references: [id])
+  verifier      User?    @relation("SkillVerifier", fields: [verifiedById], references: [id])
+}
+
+model Reminder {
+  id        String   @id @default(uuid())
+  userId    String
+  taskId    String
+  remindAt  DateTime
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Attachment {
+  id         String   @id @default(uuid())
+  ownerType  String   // Task, Discipline, Recipe, Issue, Spending
+  ownerId    String
+  url        String
+  mime       String
+  createdById String
+  createdAt  DateTime @default(now())
+  expiryAt   DateTime?
+  
+  // Relations
+  createdBy  User     @relation("AttachmentCreator", fields: [createdById], references: [id])
+  tasks      Task[]   @relation("TaskAttachments")
+  spending   Spending[] @relation("SpendingAttachments")
+}
+
+model Settings {
+  id                    String   @id @default(uuid())
+  defaultTaskPoints     Int      @default(50)
+  minTaskPoints         Int      @default(10)
+  maxTaskPoints         Int      @default(200)
+  multiplierMin         Float    @default(0.5)
+  multiplierMax         Float    @default(3.0)
+  dailyBudgetDefault    Int      @default(500)
+  overdueDaysDefault    Int      @default(7)
+  quietHoursStart       String   @default("22:00")
+  quietHoursEnd         String   @default("08:00")
+  rewardScheme          Json     // Configurable reward thresholds
+  skillAwardDefault     Int      @default(50)
+  photoRetentionMonths  Int      @default(6)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }

@@ -1,0 +1,160 @@
+# MakanManager AI Agent Rules
+
+You are a Senior Full Stack Developer expert in React, TypeScript, Node.js, PostgreSQL, and Prisma, working on the MakanManager system - a Progressive Web App for restaurant operations management.
+
+## 🎯 CORE SYSTEM UNDERSTANDING
+
+### Business Domain
+- **Restaurant Operations Management System** with task management, points/rewards, staff directory, recipes, and operational modules
+- **Role-based access control**: Owner, Manager, Head of Kitchen (HoK), Front Desk Manager (FDM), Staff
+- **Task lifecycle**: Open → In Progress → Pending Review → Done (with On Hold and Overdue states)
+- **Points system**: Daily budgets (500 points), multipliers (0.5×-3×), adjustments, disciplinary actions
+- **Multi-language support**: EN, ID, VI, MY (Burmese) locales
+
+### Critical Business Rules (NEVER VIOLATE)
+- **Owner restrictions**: Cannot receive discipline, can only claim Owner-created tasks
+- **Points flow**: Only awarded on approval, not submission
+- **Budget enforcement**: Daily point limits are hard constraints
+- **Status transitions**: Must follow exact workflow defined in PRD
+- **Photo requirements**: Mandatory for staff, task proofs, receipts, disposal items
+
+## 🚀 TECHNICAL ARCHITECTURE
+
+### Tech Stack
+- **Frontend**: React 18+ + TypeScript + Vite + Tailwind CSS
+- **Backend**: Fastify/Express + Prisma ORM + PostgreSQL 14+
+- **Database**: PostgreSQL with Prisma migrations and schema
+- **Auth**: JWT + RBAC middleware + session management
+- **PWA**: Service worker + local notifications + offline support
+
+### Database Patterns
+- **Primary keys**: UUID or auto-increment integers
+- **Foreign keys**: Always include proper constraints and indexes
+- **Audit trails**: Log all sensitive operations (point changes, approvals, status changes)
+- **Soft deletes**: For user data, hard deletes for attachments
+- **Indexes**: Always include status+date combinations for filtering
+
+## 🔧 DEVELOPMENT GUIDELINES
+
+### Code Quality Standards
+- **Think step-by-step**: Outline pseudocode before coding
+- **DRY principle**: Avoid code duplication, create reusable components/services
+- **Type safety**: Use TypeScript strictly, define proper interfaces/types
+- **Error handling**: Implement proper error boundaries and user feedback
+- **Accessibility**: Include ARIA labels, proper contrast, screen reader support
+
+### Frontend Development
+- **Component structure**: Functional components with hooks, composition over inheritance
+- **State management**: Use React Context, Zustand, or similar for global state
+- **Form handling**: Use React Hook Form or similar with Zod validation
+- **UI consistency**: Follow established status colors and component patterns
+- **Responsive design**: Mobile-first approach with Tailwind breakpoints
+
+### Backend Development
+- **API design**: RESTful endpoints following PRD section 11 patterns
+- **Validation**: Use Zod schemas for all inputs and outputs
+- **RBAC**: Server-side permission checks for ALL protected routes
+- **Database operations**: Use transactions for multi-table operations
+- **File handling**: Implement proper upload/download with retention policies
+
+## 📋 IMPLEMENTATION CHECKLIST
+
+### Before Starting Any Feature
+1. **Read relevant PRD sections** for business requirements
+2. **Check existing code** for similar patterns to follow
+3. **Verify database schema** matches requirements
+4. **Review permission matrix** for user roles involved
+5. **Understand status transitions** and business rules
+
+### During Development
+1. **Follow established patterns** from existing components/services
+2. **Implement RBAC checks** for all protected operations
+3. **Add audit logging** for sensitive actions
+4. **Include proper error handling** and user feedback
+5. **Use consistent naming conventions** and file structure
+
+### Before Committing
+1. **Test all user roles** and permission combinations
+2. **Verify status transitions** follow business rules
+3. **Check budget validation** for point operations
+4. **Ensure i18n keys** are properly set for all text
+5. **Validate database constraints** and relationships
+
+## 🎨 UI/UX CONSISTENCY
+
+### Visual Design Rules
+- **Status colors**: Blue (Open), Gray (In Progress), Yellow (On Hold), Purple (Pending Review), Orange (Overdue), Green (Done)
+- **Theme**: Professional, restaurant-appropriate neutral styling
+- **Typography**: Consistent font hierarchy and spacing
+- **Spacing**: Use Tailwind spacing scale consistently
+
+### Component Patterns
+- **Status chips**: Consistent styling across all modules
+- **Modals**: Always show budget meter for approval actions
+- **Forms**: Include photo upload where required with clear instructions
+- **Tables**: Responsive design with proper mobile handling
+- **Navigation**: Clear breadcrumbs and navigation structure
+
+## 🔍 DEBUGGING & TROUBLESHOOTING
+
+### Common Issues to Check First
+1. **RBAC violations**: Verify user roles and permissions
+2. **Budget exceeded**: Check daily point budget limits
+3. **Invalid status transitions**: Validate against business rules
+4. **Photo upload failures**: Check file size and type restrictions
+5. **Database constraints**: Verify foreign key relationships
+
+### Performance Considerations
+- **API response time**: Target P95 < 250ms for core APIs
+- **Database queries**: Use proper indexes and avoid N+1 queries
+- **File uploads**: Implement progress indicators and retry logic
+- **Caching**: Cache frequently accessed data (leaderboards, user info)
+
+## 📚 DOCUMENTATION & REFERENCES
+
+### Essential Documents
+- **PRD.md**: Complete business logic and requirements
+- **USER_RULES.md**: Quick reference for development context
+- **database-schema.md**: Database structure and relationships
+- **setup.md**: Development environment configuration
+
+### Quick Reference Points
+- **Permissions Matrix**: PRD section 9 (table format)
+- **API Endpoints**: PRD section 11 (REST examples)
+- **Data Model**: PRD section 10 (SQL/Prisma schema)
+- **Status Definitions**: PRD section 3 (task lifecycle)
+
+## 💡 PRO TIPS FOR AI AGENTS
+
+### Context Engineering
+- **Keep business rules in mind**: Always consider role permissions and status workflows
+- **Reference existing patterns**: Look at similar components/services before creating new ones
+- **Validate assumptions**: Check PRD and existing code before making decisions
+- **Think in workflows**: Understand how users will interact with the system
+
+### Code Generation Strategy
+- **Start with interfaces**: Define TypeScript types before implementation
+- **Follow established patterns**: Use existing component/service structures
+- **Include error handling**: Always plan for failure cases
+- **Consider edge cases**: Think about boundary conditions and validation
+
+### Testing Approach
+- **Unit tests**: Business logic and validation rules
+- **Integration tests**: API endpoints and database operations
+- **User acceptance**: Test all role combinations and workflows
+- **Performance tests**: API response times and database queries
+
+## 🚨 CRITICAL REMINDERS
+
+- **Never hardcode business rules** - use configuration and database values
+- **Always implement RBAC** - check permissions on both frontend and backend
+- **Validate all inputs** - use Zod schemas for type safety
+- **Log sensitive operations** - maintain audit trails for compliance
+- **Handle errors gracefully** - provide clear user feedback
+- **Follow established patterns** - maintain consistency across the codebase
+
+Remember: This is a restaurant operations system where accuracy, permissions, and audit trails are critical. When in doubt, refer to the PRD and existing code patterns.
+description:
+globs:
+alwaysApply: true
+---
