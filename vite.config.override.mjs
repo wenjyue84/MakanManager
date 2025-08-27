@@ -53,7 +53,7 @@ export default defineConfig({
   },
   server: {
     host: true,                             // listen on 0.0.0.0
-    port: Number(process.env.PORT) || 5000, // play nice with Replit
+    port: Number(process.env.PORT) || 3000, // changed from 5000 to 3000
     allowedHosts: ['.replit.dev', '.repl.co'], // allow all subdomains
     hmr: {
       clientPort: 443,
@@ -65,7 +65,7 @@ export default defineConfig({
   },
   preview: {
     host: true,
-    port: Number(process.env.PORT) || 5000,
+    port: Number(process.env.PORT) || 3000, // changed from 5000 to 3000
     allowedHosts: ['.replit.dev', '.repl.co'],
   },
 })
