@@ -196,17 +196,68 @@ app.delete('/api/staff-meals/:id', (req, res) => {
 // Start server only if this file is run directly
 if (require.main === module) {
   const path = require('path');
+  const fs = require('fs');
+
+  // Check for build directories (Vite uses 'dist', some other tools use 'build')
+  const distPath = path.join(__dirname, '../dist');
+  const buildPath = path.join(__dirname, '../build');
+  let staticPath = distPath;
+  let indexPath = path.join(distPath, 'index.html');
+
+  // Use build directory if dist doesn't exist
+  if (!fs.existsSync(distPath) && fs.existsSync(buildPath)) {
+    staticPath = buildPath;
+    indexPath = path.join(buildPath, 'index.html');
+  }
+
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.json({ 
+      status: 'healthy',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      staticPath: staticPath
+    });
+  });
 
   // Serve static files from build directory
-  app.use(express.static(path.join(__dirname, '../build')));
+  app.use(express.static(staticPath));
 
   // Handle all other routes by serving the React app
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../build/index.html'));
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        console.error('Error serving index.html:', err);
+        res.status(500).json({ 
+          error: 'Application not built yet',
+          message: 'Please run "npm run build" first'
+        });
+      }
+    });
   });
 
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`Serving static files from: ${staticPath}`);
+    console.log(`Health check available at http://localhost:${PORT}/health`);
+  });
+
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    process.exit(0);
+  });
+
+  process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully');
+    process.exit(0);
+  });
 }
 
 module.exports = app;
