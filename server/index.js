@@ -195,8 +195,18 @@ app.delete('/api/staff-meals/:id', (req, res) => {
 
 // Start server only if this file is run directly
 if (require.main === module) {
-  const PORT = process.env.PORT || 3001;
-  app.listen(PORT, () => console.log(`Auth server running on port ${PORT}`));
+  const path = require('path');
+
+  // Serve static files from build directory
+  app.use(express.static(path.join(__dirname, '../build')));
+
+  // Handle all other routes by serving the React app
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../build/index.html'));
+  });
+
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
 }
 
 module.exports = app;
