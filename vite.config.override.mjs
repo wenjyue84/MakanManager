@@ -33,7 +33,7 @@ export default defineConfig({
       '@radix-ui/react-progress@1.1.2': '@radix-ui/react-progress',
       '@radix-ui/react-navigation-menu@1.2.5': '@radix-ui/react-navigation-menu',
       '@radix-ui/react-menubar@1.1.6': '@radix-ui/react-menubar',
-      '@radix-ui/react-label@2.1.2': '@radix-ui/react-label',
+      '@radix-ui/react-label@1.1.2': '@radix-ui/react-label',
       '@radix-ui/react-hover-card@1.1.6': '@radix-ui/react-hover-card',
       '@radix-ui/react-dropdown-menu@2.1.6': '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-dialog@1.1.6': '@radix-ui/react-dialog',
