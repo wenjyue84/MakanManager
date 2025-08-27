@@ -6,8 +6,27 @@ const prisma = new PrismaClient();
 const app = express();
 app.use(express.json());
 
-// Serve static files from the dist directory
-app.use(express.static(path.join(__dirname, '../../dist')));
+// Health check endpoint for deployment (required at root path)
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'Makan Moments Staff Points & Tasks PWA is running',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'production'
+  });
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Serve static files from the build directory
+app.use(express.static(path.join(__dirname, '../../build')));
 
 // simple role checker
 function canEdit(req, staffId) {
@@ -112,12 +131,47 @@ app.post('/api/user-skills/:id/verify', async (req, res) => {
   res.json(updated);
 });
 
-// Catch-all route to serve React app for client-side routing
+// Handle React Router - send all non-API requests to index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../dist/index.html'));
+  // Don't serve index.html for API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  const indexPath = path.join(__dirname, '../../build', 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err);
+      res.status(500).send('Error loading application');
+    }
+  });
 });
 
-const port = process.env.PORT || 4000;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  });
+});
+
+// Start server on port 5000 as required by deployment
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Production server running on port ${PORT}`);
+  console.log(`Health check available at http://localhost:${PORT}/health`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'production'}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  process.exit(0);
 });
