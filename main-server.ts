@@ -15,9 +15,10 @@ async function main() {
     serveStatic(app);
   }
 
-  const PORT = process.env.PORT || 5000;
+  const PORT = Number(process.env.PORT) || 5000;
+  const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
   
-  server.listen(PORT, () => {
+  server.listen(PORT, HOST, () => {
     const formattedTime = new Date().toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
@@ -25,7 +26,7 @@ async function main() {
       hour12: true,
     });
 
-    console.log(`${formattedTime} [express] Server running at http://localhost:${PORT}`);
+    console.log(`${formattedTime} [express] Server running at http://${HOST}:${PORT}`);
   });
 }
 
