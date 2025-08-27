@@ -6,7 +6,7 @@ import fs from 'fs';
 function serveServiceWorker() {
   return {
     name: 'serve-sw',
-    apply: 'serve',
+    apply: 'serve' as const,
     configureServer(server: any) {
       server.middlewares.use((req: any, res: any, next: any) => {
         if (req.url === '/sw.js') {
@@ -72,7 +72,14 @@ export default defineConfig({
     server: {
       port: 3000,
       open: true,
-      historyApiFallback: true,
+      host: true, // Allow external connections (needed for Replit)
+      allowedHosts: [
+        'localhost',
+        '127.0.0.1',
+        '.replit.dev', // Allow all Replit subdomains
+        '.replit.co',  // Allow all Replit subdomains
+        '.replit.app', // Allow all Replit subdomains
+      ],
       proxy: {
         '/api': {
           target: 'http://localhost:3001',
