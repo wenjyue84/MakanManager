@@ -80,6 +80,17 @@ Makan Moments is a full-featured restaurant management system that combines task
 
 The application will be available at `http://localhost:3000`
 
+### 📚 Documentation
+
+For comprehensive documentation, setup guides, and troubleshooting, see the [Documentation](./docs/README.md) folder:
+
+- **[Setup Guide](./docs/development/setup.md)** - Complete development environment setup
+- **[Architecture](./docs/project/architecture.md)** - System architecture and design
+- **[API Documentation](./docs/development/api-docs.md)** - API endpoints and usage
+- **[Database Schema](./docs/development/database-schema.md)** - Database structure and relationships
+- **[Troubleshooting](./docs/troubleshooting/fix.md)** - Common issues and solutions
+- **[Changelog](./docs/maintenance/changelog.md)** - Version history and changes
+
 ## 🏗️ Tech Stack
 
 ### Core Framework
