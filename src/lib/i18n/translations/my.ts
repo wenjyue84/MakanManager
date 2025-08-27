@@ -180,7 +180,7 @@ export const my = {
   preferences: "ဦးစားပေးမှုများ",
   language: "ဘာသာစကား",
   theme: "အပြင်အဆင်",
-  notifications: "အကြောင်းကြားချက်များ",
+  notificationSettings: "အကြောင်းကြားချက်များ",
   privacy: "ကိုယ်ရေးကိုယ်တာ",
   help: "အကူအညီ",
   about: "အကြောင်းအရာ",

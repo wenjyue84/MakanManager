@@ -207,7 +207,7 @@ export const id = {
   preferences: "Preferensi",
   language: "Bahasa",
   theme: "Tema",
-  notifications: "Notifikasi",
+  notificationSettings: "Notifikasi",
   privacy: "Privasi",
   help: "Bantuan",
   about: "Tentang",

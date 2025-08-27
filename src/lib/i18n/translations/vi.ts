@@ -180,7 +180,7 @@ export const vi = {
   preferences: "Tùy chọn",
   language: "Ngôn ngữ",
   theme: "Giao diện",
-  notifications: "Thông báo",
+  notificationSettings: "Thông báo",
   privacy: "Riêng tư",
   help: "Trợ giúp",
   about: "Giới thiệu",
