@@ -74,7 +74,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "dev:replit": "vite --host 0.0.0.0 --port 5000",
+    "dev:replit": "vite --host 0.0.0.0 --port 5000 --allowedHosts",
     "build": "vite build",
     "server": "node backend/src/server.js",
     "start": "npm run build && npm run server"
