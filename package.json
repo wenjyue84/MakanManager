@@ -84,15 +84,8 @@
     "dev": "vite",
     "dev:replit": "vite --host 0.0.0.0 --port 5000 --allowedHosts",
     "build": "vite build",
+    "start": "node server/index.js",
     "server": "node backend/src/server.js",
-    "scripts": {
-      "dev": "vite",
-      "dev:replit": "vite --host 0.0.0.0 --port 5000 --allowedHosts",
-      "build": "vite build",
-      "preview": "vite preview",
-      "server": "node backend/src/server.js",
-      "start": "node server/index.js",
-      "prod": "npm run build && npm start"
-    }
+    "prod": "npm run build && npm start"
   }
 }
