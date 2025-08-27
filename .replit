@@ -44,3 +44,4 @@ integrations = ["javascript_database==1.0.0"]
 
 [deployment]
 deploymentTarget = "cloudrun"
+run = ["sh", "-c", "npm run dev"]
