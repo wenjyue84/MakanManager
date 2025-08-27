@@ -33,7 +33,7 @@ export default defineConfig({
       '@radix-ui/react-progress@1.1.2': '@radix-ui/react-progress',
       '@radix-ui/react-navigation-menu@1.2.5': '@radix-ui/react-navigation-menu',
       '@radix-ui/react-menubar@1.1.6': '@radix-ui/react-menubar',
-      '@radix-ui/react-label@2.1.2': '@radix-ui/react-label',
+      '@radix-ui/react-label@1.1.2': '@radix-ui/react-label',
       '@radix-ui/react-hover-card@1.1.6': '@radix-ui/react-hover-card',
       '@radix-ui/react-dropdown-menu@2.1.6': '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-dialog@1.1.6': '@radix-ui/react-dialog',
@@ -53,7 +53,7 @@ export default defineConfig({
   },
   server: {
     host: true,                             // listen on 0.0.0.0
-    port: Number(process.env.PORT) || 5000, // play nice with Replit
+    port: Number(process.env.PORT) || 3000, // changed from 5000 to 3000
     allowedHosts: ['.replit.dev', '.repl.co'], // allow all subdomains
     hmr: {
       clientPort: 443,
@@ -65,7 +65,7 @@ export default defineConfig({
   },
   preview: {
     host: true,
-    port: Number(process.env.PORT) || 5000,
+    port: Number(process.env.PORT) || 3000, // changed from 5000 to 3000
     allowedHosts: ['.replit.dev', '.repl.co'],
   },
 })

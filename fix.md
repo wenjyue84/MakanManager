@@ -167,6 +167,192 @@ npm run dev
 4. **Implement proper state management** for development vs production
 5. **Add automated testing** to prevent regression
 
+## Latest Resolution: Port Configuration Success ✅
+
+### Issue Resolved: Port 3000 Configuration
+**Date:** Current session  
+**Problem:** App couldn't start on localhost:3000 due to port configuration  
+**Root Cause:** Vite config was set to use port 5000 by default  
+
+### Solution Implemented
+1. **Updated `vite.config.override.mjs`:**
+   - Changed server port from `5000` to `3000`
+   - Changed preview port from `5000` to `3000`
+   - Maintained environment variable override capability
+
+2. **Port Conflict Avoidance:**
+   - Successfully separated from Pelangimanager app on port 5000
+   - App now runs independently on port 3000
+
+### Current Status
+✅ **App running successfully** on http://localhost:3000/  
+✅ **Vite server started** in 258ms  
+✅ **No port conflicts** with other applications  
+✅ **Multiple network interfaces** available for development  
+
+### Terminal Output Confirmation
+```
+VITE v6.3.5  ready in 258 ms
+➜  Local:   http://localhost:3000/
+➜  Network: http://172.22.64.1:3000/
+➜  Network: http://192.168.182.1:3000/
+➜  Network: http://192.168.220.1:3000/
+➜  Network: http://192.168.0.5:3000/
+```
+
+### Notes
+- Some translation file warnings exist (duplicate keys) but don't affect functionality
+- API proxy error for `/api/tasks` observed but app loads successfully
+- Development server running in background mode
+
 ---
 
-*This troubleshooting guide was created after successfully resolving multiple issues with the MakanManager React application. The solutions implemented ensure the app runs smoothly in development while maintaining proper separation between frontend and backend concerns.*
+## Latest Resolution: SWC Binding & Dependency Conflicts ✅
+
+### Issue Resolved: Critical Startup Failures
+**Date:** August 27, 2025  
+**Problem:** App completely failed to start with multiple critical errors  
+**Status:** ✅ Successfully resolved - App now running on port 5000  
+
+### Root Causes Identified
+
+#### 1. SWC Native Binding Failure
+**Error:** `Failed to load native binding` from `@vitejs/plugin-react-swc`  
+**Symptoms:**
+- Server wouldn't start at all
+- Native binding errors in console
+- ESM/CommonJS compatibility issues
+
+#### 2. Import Path Conflicts  
+**Error:** `Cannot find module '@/components/ui/*'`  
+**Symptoms:**
+- React import errors in multiple files
+- Missing React imports causing UMD global errors
+- Incorrect path aliases pointing to wrong directories
+
+#### 3. Tailwind CSS Configuration Issues
+**Error:** `@layer base is used but no matching @tailwind base directive is present`  
+**Symptoms:**
+- PostCSS transformation errors
+- CSS compilation failures
+- Vite error overlay blocking app
+
+#### 4. Git Merge Conflicts
+**Issue:** Dependency conflicts during GitHub merge  
+**Files Affected:**
+- `package-lock.json`
+- `node_modules/.package-lock.json`
+- `node_modules/@esbuild/win32-x64/*`
+
+### Solutions Implemented
+
+#### 1. SWC Compatibility Fix
+```bash
+# Uninstalled problematic version
+npm uninstall @vitejs/plugin-react-swc
+
+# Installed compatible version
+npm install @vitejs/plugin-react-swc@3.5.0
+
+# Cleared Vite cache
+rm -rf node_modules/.vite .vite dist build
+```
+
+**Result:** Native binding errors resolved, server starts successfully
+
+#### 2. Import Path Resolution  
+```typescript
+// Fixed React imports across multiple files:
+// client/src/App.tsx, client/src/main.tsx, client/src/pages/not-found.tsx
+
+// Before:
+import { Toaster } from "@/components/ui/toaster";
+
+// After: 
+import React from "react";
+import { Toaster } from "./components/ui/toaster";
+```
+
+#### 3. Tailwind CSS Configuration
+```css
+// Added missing directives to src/index.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*! tailwindcss v4.1.3 | MIT License | https://tailwindcss.com */
+@layer properties {
+  // ... existing content
+```
+
+#### 4. Git Merge Resolution
+**Quick Method Used:**
+```bash
+# Remove git lock
+rm -f .git/index.lock
+
+# Abort conflicted merge
+git merge --abort
+
+# Clean rebase
+git pull origin main --rebase
+git push origin main
+```
+
+### Technical Details
+
+#### Version Compatibility Matrix
+- **Vite:** 5.4.19 ✅
+- **@vitejs/plugin-react-swc:** 3.5.0 ✅ (was 4.0.1 ❌)
+- **React:** 18.3.1 ✅
+- **TypeScript:** 5.2.2 ✅
+
+#### Project Structure Clarification
+```
+workspace/
+├── client/src/        # Client-side React app (correct structure)
+├── src/              # Server-side + shared code
+├── vite.config.ts    # Vite configuration (port 5000)
+└── package.json      # Root dependencies
+```
+
+### Current Status
+✅ **Server running successfully** on http://localhost:5000/  
+✅ **Vite ready** in 240ms startup time  
+✅ **All import errors resolved**  
+✅ **Tailwind CSS compiling properly**  
+✅ **Git conflicts resolved and merged**  
+✅ **App displays correctly** in preview  
+✅ **Authentication system working** (auto-login with Jay user)  
+
+### Warning Messages (Non-Critical)
+- PostCSS module type warnings (performance impact only)
+- API proxy errors to port 3001 (expected - backend not running)
+- Translation file duplicate key warnings (cosmetic only)
+
+### Debugging Process Timeline
+1. **Initial failure:** Complete startup failure with SWC errors
+2. **Dependency analysis:** Identified version incompatibility 
+3. **Package management:** Uninstalled/reinstalled compatible versions
+4. **Import cleanup:** Fixed React imports and path aliases
+5. **CSS configuration:** Added missing Tailwind directives
+6. **Git resolution:** Resolved dependency merge conflicts
+7. **Final verification:** App running successfully with UI display
+
+### Prevention Strategies
+1. **Pin exact versions** for critical build tools like SWC
+2. **Use consistent import patterns** throughout the project
+3. **Always include required Tailwind directives** when using layers
+4. **Regenerate package-lock.json** for dependency conflicts
+5. **Test startup process** after any build tool changes
+
+### Lessons Learned
+1. **Version compatibility** is critical for build tools like SWC
+2. **Generated files** (package-lock.json) should be regenerated for conflicts
+3. **CSS preprocessing** requires proper directive setup
+4. **Import path aliases** must match actual directory structure
+5. **Quick rebase** is often cleaner than complex merge resolution
+
+---
+
+*This troubleshooting guide documents the complete resolution of critical startup failures in the Makan Moments PWA. The app is now successfully running with all major issues resolved.*

@@ -10,9 +10,9 @@ const __dirname = path.dirname(__filename);
 function serveServiceWorker() {
   return {
     name: 'serve-sw',
-    apply: 'serve' as const,
-    configureServer(server: any) {
-      server.middlewares.use((req: any, res: any, next: any) => {
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
         if (req.url === '/sw.js') {
           res.setHeader('Content-Type', 'application/javascript');
           res.end(fs.readFileSync(path.resolve(__dirname, 'public/sw.js')));
