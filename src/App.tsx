@@ -31,6 +31,7 @@ import { Task } from "./lib/types";
 import { users } from "./lib/data";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
+import { TasksService } from "./lib/services/tasks.service";
 
 function AppContent() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -44,11 +45,14 @@ function AppContent() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await fetch('/api/tasks');
-        if (!res.ok) throw new Error('Failed to load tasks');
-        const data = await res.json();
+        console.log('Fetching tasks from mock service...');
+        const tasksService = new TasksService();
+        const data = await tasksService.getAllTasks();
+        console.log('Tasks loaded successfully from mock service:', data);
         setTasks(data);
+        setError(null); // Clear any previous errors
       } catch (err:any) {
+        console.error('Error fetching tasks from mock service:', err);
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -62,49 +66,68 @@ function AppContent() {
     setIsTaskModalOpen(true);
   };
 
-  const handleTaskUpdate = (
+  const handleTaskUpdate = async (
     taskId: string,
     updates: Partial<Task>,
   ) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId ? { ...task, ...updates } : task,
-      ),
-    );
+    try {
+      const tasksService = new TasksService();
+      const updatedTask = await tasksService.updateTask(taskId, updates);
+      
+      if (updatedTask) {
+        setTasks((prev) =>
+          prev.map((task) =>
+            task.id === taskId ? updatedTask : task,
+          ),
+        );
+      }
 
-    // Show appropriate toast based on update
-    if (
-      updates.status === "in-progress" &&
-      updates.assigneeId
-    ) {
-      toast.success("Task claimed successfully!");
-    } else if (updates.status === "pending-review") {
-      toast.success("Task submitted for review!");
-    } else if (updates.status === "done") {
-      toast.success("Task approved! Points awarded.");
-    } else if (updates.status === "on-hold") {
-      toast.info("Task put on hold. SLA paused.");
-    } else if (
-      updates.status === "in-progress" &&
-      updates.rejectionReason
-    ) {
-      toast.error("Task rejected. Please check feedback.");
-    } else if (updates.rejectionReason) {
-      toast.error("Task rejected. Please check feedback.");
+      // Show appropriate toast based on update
+      if (
+        updates.status === "in-progress" &&
+        updates.assigneeId
+      ) {
+        toast.success("Task claimed successfully!");
+      } else if (updates.status === "pending-review") {
+        toast.success("Task submitted for review!");
+      } else if (updates.status === "done") {
+        toast.success("Task approved! Points awarded.");
+      } else if (updates.status === "on-hold") {
+        toast.info("Task put on hold. SLA paused.");
+      } else if (
+        updates.status === "in-progress" &&
+        updates.rejectionReason
+      ) {
+        toast.error("Task rejected. Please check feedback.");
+      } else if (updates.rejectionReason) {
+        toast.error("Task rejected. Please check feedback.");
+      }
+
+      setIsTaskModalOpen(false);
+      setSelectedTask(null);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast.error("Failed to update task");
     }
-
-    setIsTaskModalOpen(false);
-    setSelectedTask(null);
   };
 
   const handleCreateTask = () => {
     setIsCreateTaskModalOpen(true);
   };
 
-  const handleTaskCreate = (
+  const handleTaskCreate = async (
     taskData: Omit<Task, "id" | "createdAt" | "overdueDays">
   ) => {
-    toast.info("Task creation via API not implemented in demo");
+    try {
+      const tasksService = new TasksService();
+      const newTask = await tasksService.createTask(taskData);
+      setTasks(prev => [newTask, ...prev]);
+      toast.success("Task created successfully!");
+      setIsCreateTaskModalOpen(false);
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error("Failed to create task");
+    }
   };
 
   const handleCreateDiscipline = () => {

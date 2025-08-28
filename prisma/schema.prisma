@@ -31,10 +31,12 @@ model User {
   // Relations
   assignedTasks     Task[]   @relation("TaskAssignee")
   createdTasks      Task[]   @relation("TaskAssigner")
-  pointEntries      PointEntry[]
+  pointEntries      PointEntry[] @relation("PointEarner")
+  approvedPointEntries PointEntry[] @relation("PointApprover")
   disciplinaryActions DisciplinaryAction[] @relation("DisciplinaryTarget")
   createdDisciplinary DisciplinaryAction[] @relation("DisciplinaryCreator")
   verifiedSkills    UserSkill[] @relation("SkillVerifier")
+  userSkills        UserSkill[] @relation("UserSkillOwner")
   createdSpending   Spending[] @relation("SpendingCreator")
   approvedSpending  Spending[] @relation("SpendingApprover")
   createdIssues     Issue[] @relation("IssueReporter")
@@ -105,21 +107,24 @@ model PointEntry {
   createdAt   DateTime @default(now())
   
   // Relations
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation("PointEarner", fields: [userId], references: [id])
   task        Task?    @relation(fields: [taskId], references: [id])
   issue       Issue?   @relation(fields: [issueId], references: [id])
-  approver    User     @relation(fields: [approvedById], references: [id])
+  approver    User     @relation("PointApprover", fields: [approvedById], references: [id])
   
   @@index([userId, createdAt])
 }
 
 model DisciplinaryType {
   id            String   @id @default(uuid())
-  name          String
+  name          String   @unique
   defaultPoints Int      // Negative value
   active        Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  
+  // Relations
+  disciplinaryActions DisciplinaryAction[]
 }
 
 model DisciplinaryAction {
@@ -152,12 +157,13 @@ model Recipe {
   station      String
   yieldText    String
   createdById  String
+  updatedById  String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   
   // Relations
   createdBy    User     @relation("RecipeCreator", fields: [createdById], references: [id])
-  updatedBy    User     @relation("RecipeUpdater", fields: [createdById], references: [id])
+  updatedBy    User     @relation("RecipeUpdater", fields: [updatedById], references: [id])
 }
 
 model StaffMeal {
@@ -306,7 +312,7 @@ model UserSkill {
   createdAt     DateTime @default(now())
   
   // Relations
-  user          User     @relation(fields: [userId], references: [id])
+  user          User     @relation("UserSkillOwner", fields: [userId], references: [id])
   skill         Skill    @relation(fields: [skillId], references: [id])
   verifier      User?    @relation("SkillVerifier", fields: [verifiedById], references: [id])
 }

@@ -13,7 +13,12 @@
       "Bash(aws:*)",
       "Bash(eb:*)",
       "Bash(pip --version)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(C:UsersJyueAppDataRoamingPythonPython312Scriptseb.exe --version)",
+      "Bash(export PATH=$PATH:/c/Users/Jyue/AppData/Roaming/Python/Python312/Scripts)",
+      "Bash(npm ci:*)",
+      "Bash(timeout 10 npm start)",
+      "Bash(./create-deployment-package.bat)"
     ],
     "deny": [],
     "ask": []
