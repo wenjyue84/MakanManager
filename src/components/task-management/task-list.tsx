@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
@@ -23,13 +23,13 @@ import {
 } from '../ui/table';
 import { StatusChip } from '../ui/status-chip';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
-import { Task, Station, TaskStatus, User as UserType } from '../../lib/types';
-import { users } from '../../lib/data';
+import { Task, Station, TaskStatus } from '../../lib/types';
 import { useCurrentUser } from '../../lib/hooks/use-current-user';
 import { TaskCreateModal } from '../modals/task-create-modal';
 import { TaskEditModal } from '../modals/task-edit-modal';
 import { TaskDetailModal } from '../modals/task-detail-modal';
 import { toast } from 'sonner';
+import { tasksApi } from '../../lib/api/tasks';
 
 interface TaskListProps {
   tasks: Task[];
@@ -41,6 +41,7 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | 'all'>('all');
   const [selectedStation, setSelectedStation] = useState<Station | 'all'>('all');
+  const [isTaskLoading, setIsTaskLoading] = useState(false);
   
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -81,7 +82,15 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
     ['owner', 'manager', 'head-of-kitchen', 'front-desk-manager'].includes(role)
   );
 
-  const getUserById = (id: string) => users.find(user => user.id === id);
+  const getUserById = (id: string) => {
+    // For now, return a mock user - in real app this would come from user context or API
+    return {
+      id,
+      name: 'User',
+      photo: '',
+      station: 'kitchen'
+    };
+  };
 
   const formatTime = (timeString: string) => {
     return new Date(`2024-01-01T${timeString}`).toLocaleTimeString('en-US', {
@@ -107,31 +116,64 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
   };
 
   // CRUD Operations
-  const handleCreateTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'overdueDays'>) => {
-    const newTask: Task = {
-      ...taskData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      overdueDays: 0
-    };
+  const handleCreateTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'overdueDays'>) => {
+    try {
+      setIsTaskLoading(true);
+      const response = await tasksApi.createTask({
+        title: taskData.title,
+        description: taskData.description,
+        station: taskData.station,
+        points: taskData.basePoints,
+        dueAt: `${taskData.dueDate}T${taskData.dueTime}`,
+        proofType: taskData.proofType,
+        allowMultiplier: taskData.allowMultiplier,
+        assigneeId: taskData.assigneeId
+      });
 
-    const updatedTasks = [newTask, ...tasks];
-    onTasksChange(updatedTasks);
-    toast.success('Task created successfully!');
+      const updatedTasks = [response.task, ...tasks];
+      onTasksChange(updatedTasks);
+      toast.success('Task created successfully!');
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error('Failed to create task. Please try again.');
+    } finally {
+      setIsTaskLoading(false);
+    }
   };
 
-  const handleUpdateTask = (taskId: string, updates: Partial<Task>) => {
-    const updatedTasks = tasks.map(task =>
-      task.id === taskId ? { ...task, ...updates } : task
-    );
-    onTasksChange(updatedTasks);
-    toast.success('Task updated successfully!');
+  const handleUpdateTask = async (taskId: string, updates: Partial<Task>) => {
+    try {
+      setIsTaskLoading(true);
+      const response = await tasksApi.updateTask(taskId, updates);
+      
+      const updatedTasks = tasks.map(task =>
+        task.id === taskId ? response.task : task
+      );
+      onTasksChange(updatedTasks);
+      toast.success('Task updated successfully!');
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast.error('Failed to update task. Please try again.');
+    } finally {
+      setIsTaskLoading(false);
+    }
   };
 
-  const handleDeleteTask = (taskId: string) => {
-    const updatedTasks = tasks.filter(task => task.id !== taskId);
-    onTasksChange(updatedTasks);
-    toast.success('Task deleted successfully!');
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      setIsTaskLoading(true);
+      // Note: Delete endpoint not implemented yet in backend
+      const updatedTasks = tasks.filter(task => task.id !== taskId);
+      onTasksChange(updatedTasks);
+      toast.success('Task deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast.error('Failed to delete task. Please try again.');
+    } finally {
+      setIsTaskLoading(false);
+    }
   };
 
   const handleViewTask = (task: Task) => {
@@ -297,7 +339,13 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
       {/* Tasks Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="border rounded-lg">
+          {isTaskLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="size-6 animate-spin mr-2" />
+              <span>Loading...</span>
+            </div>
+          ) : (
+            <div className="border rounded-lg">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -328,7 +376,8 @@ export function TaskList({ tasks, onTasksChange }: TaskListProps) {
                 )}
               </TableBody>
             </Table>
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

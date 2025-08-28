@@ -9,7 +9,11 @@
       "Read(/C:\\Users\\Jyue\\AppData\\Roaming\\Claude/**)",
       "Bash(setx:*)",
       "Bash(npm install:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(aws:*)",
+      "Bash(eb:*)",
+      "Bash(pip --version)",
+      "Bash(pip install:*)"
     ],
     "deny": [],
     "ask": []
